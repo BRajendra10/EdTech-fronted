@@ -1,7 +1,5 @@
 import api from "../axios";
-import { AxiosError } from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-
 
 export const login = createAsyncThunk(
     "user/login",
@@ -35,6 +33,20 @@ export const signup = createAsyncThunk(
     }
 );
 
+export const fetchAllUsers = createAsyncThunk(
+    "users/fetchAll",
+    async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
+        try {
+            const response = await api.get(`/users/all?page=${page}&limit=${limit}`);
+            return response.data.data;
+
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to fetch users"
+            );
+        }
+    }
+);
 
 export const verifyOtp = createAsyncThunk(
     "user/verifyOtp",
@@ -47,7 +59,7 @@ export const verifyOtp = createAsyncThunk(
 
             return response.data;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message ||"Something went wrong");
+            return rejectWithValue(err.response?.data?.message || "Something went wrong");
         }
     }
 );
@@ -87,21 +99,23 @@ export const changePassword = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk(
-        "auth/logout",
-        async (_, { rejectWithValue }) => {
-            try {
-                const res = await api.post("/users/logout");
-                return res.data;
-            } catch (err) {
-                return rejectWithValue(
-                    err.response?.data?.message || "Logout failed"
-                );
-            }
+    "auth/logout",
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await api.post("/users/logout");
+            return res.data;
+        } catch (err) {
+            return rejectWithValue(
+                err.response?.data?.message || "Logout failed"
+            );
         }
-    );
+    }
+);
 
 const initialState = {
     currentUser: null,
+    users: [],
+    pagination: {},
     status: "idle",
     error: null
 }
@@ -204,6 +218,25 @@ const userSlice = createSlice({
             .addCase(logoutUser.rejected, (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload || "Logout failed";
+            })
+
+            .addCase(fetchAllUsers.pending, state => {
+                state.status = "pending";
+                state.error = null;
+            })
+            .addCase(fetchAllUsers.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+                state.users = action.payload.docs;
+                state.pagination = {
+                    totalPages: action.payload.totalPages,
+                    currentPage: action.payload.page,
+                    hasNextPage: action.payload.hasNextPage,
+                    hasPrevPage: action.payload.hasPrevPage,
+                };
+            })
+            .addCase(fetchAllUsers.rejected, (state, action) => {
+                state.status = "rejected";
+                state.error = action.payload;
             });
     }
 });

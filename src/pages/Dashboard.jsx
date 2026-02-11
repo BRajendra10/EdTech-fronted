@@ -53,7 +53,7 @@ export default function Dashboard() {
                                 <XAxis dataKey="name" />
                                 <YAxis />
                                 <Tooltip />
-                                <Bar dataKey="value" radius={[6, 6, 0, 0]} />
+                                <Bar fill="#1447E6" dataKey="value" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>
@@ -70,7 +70,7 @@ export default function Dashboard() {
                                 <XAxis dataKey="name" />
                                 <YAxis />
                                 <Tooltip />
-                                <Bar dataKey="value" radius={[6, 6, 0, 0]} />
+                                <Bar fill="#1447E6" dataKey="value" radius={[6, 6, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </CardContent>

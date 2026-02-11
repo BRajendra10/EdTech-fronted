@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { getCurrentUser } from "./features/slice/userSlice.js";
 import Dashboard from "./pages/Dashboard.jsx";
 import CoursesPage from "./pages/Course.jsx";
+import UsersPage from "./pages/UsersPage.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -30,7 +31,7 @@ function App() {
           <Route path="/" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="settings" element={<Settings />} />
-            <Route path="users" element={<div className="bg-stone-50 text-stone-900">Welcome to users page.</div>} />
+            <Route path="users" element={<UsersPage />} />
             <Route path="courses" element={<CoursesPage />} />
             <Route path="enrollments" element={<div className="bg-stone-50 text-stone-900">Welcome to enrollments page.</div>} />
             <Route path="modules" element={<div className="bg-stone-50 text-stone-900">Welcome to modules page.</div>} />
