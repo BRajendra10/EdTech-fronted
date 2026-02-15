@@ -2,8 +2,66 @@ import { Bell } from "lucide-react"
 import { Badge } from "../ui/badge"
 import { SidebarTrigger } from "../ui/sidebar"
 import { Separator } from "../ui/separator"
+import { useLocation } from 'react-router-dom';
+
+const PAGE_CONFIG = {
+    "/": {
+        heading: "Dashboard",
+        message: "Overview of system activity and key metrics.",
+    },
+
+    "/courses": {
+        heading: "Courses",
+        message: "Create, manage, and monitor all courses.",
+    },
+
+    "/course/:courseId": {
+        heading: "Course Details",
+        message: "View course structure, modules, and lessons.",
+    },
+
+    "/users": {
+        heading: "Users",
+        message: "Manage instructors and students.",
+    },
+
+    "/enrollment": {
+        heading: "Enrollments",
+        message: "Track and manage course enrollments.",
+    },
+
+    "/settings": {
+        heading: "Settings",
+        message: "Configure system preferences and account options.",
+    },
+
+    "/modules": {
+        heading: "Modules",
+        message: "Manage course modules and content structure.",
+    },
+};
 
 export default function Topbar() {
+    const location = useLocation();
+    const getPageConfig = (pathname) => {
+        if (pathname.startsWith("/course/")) {
+            return {
+                heading: "Course Details",
+                message: "View course structure, modules, and lessons.",
+            };
+        }
+
+        return (
+            PAGE_CONFIG[pathname] || {
+                heading: "Not found",
+                message: "",
+            }
+        );
+    };
+
+    const currentPage = getPageConfig(location.pathname);
+
+
     return (
         <header className="sticky top-0 z-30 h-16 border-b bg-slate-50 text-slate-900">
             <div className="flex h-full items-center justify-between px-4">
@@ -18,10 +76,8 @@ export default function Topbar() {
                     />
 
                     <div className="leading-tight">
-                        <h2 className="text-base font-semibold">Settings</h2>
-                        <p className="text-xs text-slate-500">
-                            Manage your account and preferences
-                        </p>
+                        <h2 className="text-base font-semibold">{currentPage.heading}</h2>
+                        <p className="text-xs text-slate-500">{currentPage.message}</p>
                     </div>
                 </div>
 

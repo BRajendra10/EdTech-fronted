@@ -2,7 +2,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Users } from "lucide-react";
-import { useReducer, useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
     Card,
     CardContent,
@@ -25,8 +25,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllUsers } from "../features/slice/userSlice";
-
+import { fetchAllUsers, setRoleFilter, setSearchTerm, setStatusFilter, updateUserStatus } from "../features/slice/userSlice";
 
 const roleStyle = {
     ADMIN: "bg-red-500/10 text-red-500",
@@ -34,85 +33,25 @@ const roleStyle = {
     STUDENT: "bg-green-500/10 text-green-500",
 };
 
-const statusStyle = {
-    ACTIVE: "bg-green-500/10 text-green-500",
-    PENDING: "bg-yellow-500/10 text-yellow-500",
-    SUSPENDED: "bg-red-500/10 text-red-500",
-};
-
-const ACTIONS = {
-    HYDRATE_USERS: "hydrate-users",
-    SEARCH_USER: "search-user",
-    FILTER_USER: "filter-user",
-    NEXT_PAGE: "next-page",
-    PREV_PAGE: "prev-page",
-}
-
-const INITIAL_STATE = {
-    allUsers: [],
-    filteredUsers: [],
-};
-
-function reducer(users, action) {
-    switch (action.type) {
-        case ACTIONS.HYDRATE_USERS: {
-            return {
-                allUsers: action.payload,
-                filteredUsers: action.payload,
-            }
-        }
-        case ACTIONS.SEARCH_USER: {
-            const search = action.payload.toLowerCase();
-
-            const filtered = users.allUsers.filter(user =>
-                user.fullName.toLowerCase().includes(search)
-            );
-
-            return {
-                ...users,
-                filteredUsers: filtered,
-            };
-        }
-        case ACTIONS.FILTER_USER: {
-            const selected = action.payload.toLowerCase();
-            if (selected === "all") {
-                return {
-                    ...users,
-                    filteredUsers: users.allUsers
-                }
-            }
-
-            const filtered = users.allUsers.filter(user =>
-                user.role.toLowerCase().includes(selected) ||
-                user.status.toLowerCase().includes(selected)
-            );
-
-            return {
-                ...users,
-                filteredUsers: filtered,
-            }
-        }
-        case ACTIONS.NEXT_PAGE:
-            if (!action.payload?.hasNextPage) return users;
-            return { ...users, page: users.page + 1 };
-
-        case ACTIONS.PREV_PAGE:
-            if (!action.payload?.hasPrevPage) return users;
-            return { ...users, page: users.page - 1 };
-
-        default: return users
-    }
-}
-
 function UsersPage() {
+    const dispatch = useDispatch();
     const [page, setPage] = useState(1);
-    const [users, dispatch] = useReducer(reducer, INITIAL_STATE);
     const debounceRef = useRef(null);
-
-    const reduxDispatch = useDispatch();
     const limit = 10;
 
-    const { users: usersData, pagination } = useSelector((state) => state.users);
+    const { users, pagination, searchTerm, roleFilter, statusFilter } = useSelector((state) => state.users);
+
+    useEffect(() => {
+        dispatch(
+            fetchAllUsers({
+                page,
+                limit,
+                role: roleFilter !== "ALL" ? roleFilter : undefined,
+                status: statusFilter !== "ALL" ? statusFilter : undefined,
+                search: searchTerm || undefined,
+            })
+        );
+    }, [dispatch, page, roleFilter, statusFilter, searchTerm]);
 
     function handleSearch(value) {
         if (debounceRef.current) {
@@ -120,29 +59,20 @@ function UsersPage() {
         }
 
         debounceRef.current = setTimeout(() => {
-            dispatch({
-                type: ACTIONS.SEARCH_USER,
-                payload: value,
-            });
+            dispatch(setSearchTerm(value));
+            setPage(1);
         }, 400);
     }
 
-    function handleSelect(value) {
-        dispatch({
-            type: ACTIONS.FILTER_USER,
-            payload: value
-        })
+    function handleRoleChange(value) {
+        dispatch(setRoleFilter(value));
+        setPage(1);
     }
 
-    useEffect(() => {
-        reduxDispatch(fetchAllUsers({ page, limit }))
-    }, [page, limit, reduxDispatch])
-
-    useEffect(() => {
-        if (usersData?.length) {
-            dispatch({ type: ACTIONS.HYDRATE_USERS, payload: usersData })
-        }
-    }, [usersData])
+    function handleStatusChange(value) {
+        dispatch(setStatusFilter(value));
+        setPage(1);
+    }
 
     return (
         <div className="space-y-6 animate-in fade-in">
@@ -156,7 +86,7 @@ function UsersPage() {
                     <div className="flex flex-col sm:flex-row gap-3 mb-4">
                         <Input placeholder="Search users..." className="sm:max-w-xs" onChange={(e) => handleSearch(e.target.value)} />
 
-                        <Select onValueChange={(value) => handleSelect(value)}>
+                        <Select onValueChange={(value) => handleRoleChange(value)}>
                             <SelectTrigger className="sm:max-w-xs">
                                 <SelectValue placeholder="Role" />
                             </SelectTrigger>
@@ -168,7 +98,7 @@ function UsersPage() {
                             </SelectContent>
                         </Select>
 
-                        <Select onValueChange={(value) => handleSelect(value)}>
+                        <Select onValueChange={(value) => handleStatusChange(value)}>
                             <SelectTrigger className="sm:max-w-xs">
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
@@ -181,7 +111,7 @@ function UsersPage() {
                         </Select>
                     </div>
 
-                    {/* Table */}
+                    {/* Table (Dashboard) */}
                     <div className="hidden lg:block rounded-md border">
                         <Table>
                             <TableHeader>
@@ -195,9 +125,9 @@ function UsersPage() {
                             </TableHeader>
 
                             <TableBody>
-                                {users.filteredUsers.map((user) => (
+                                {users?.map((user) => (
                                     <TableRow key={user._id}>
-                                        <TableCell className="w-[260px] flex items-center gap-3">
+                                        <TableCell className="w-65 flex items-center gap-3">
                                             <img
                                                 src={user.avatar}
                                                 alt={user.fullName}
@@ -227,12 +157,21 @@ function UsersPage() {
                                         </TableCell>
 
                                         <TableCell>
-                                            <Badge
-                                                variant="outline"
-                                                className={statusStyle[user.status]}
+                                            <Select
+                                                value={user.status}
+                                                onValueChange={(value) =>
+                                                    dispatch(updateUserStatus({ userId: user._id, status: value }))
+                                                }
                                             >
-                                                {user.status}
-                                            </Badge>
+                                                <SelectTrigger className="w-28 h-8 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                                                    <SelectItem value="PENDING">PENDING</SelectItem>
+                                                    <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </TableCell>
 
                                         <TableCell>
@@ -248,8 +187,9 @@ function UsersPage() {
                         </Table>
                     </div>
 
+                    {/* Card (Mobile view) */}
                     <div className="space-y-3 lg:hidden">
-                        {users.filteredUsers.map((user) => (
+                        {users?.map((user) => (
                             <Card
                                 key={user._id}
                                 className="border border-border/60 shadow-sm active:scale-[0.98] transition-transform"
@@ -278,10 +218,10 @@ function UsersPage() {
                                         {/* Status dot */}
                                         <span
                                             className={`h-2.5 w-2.5 rounded-full ${user.status === "ACTIVE"
-                                                    ? "bg-green-500"
-                                                    : user.status === "PENDING"
-                                                        ? "bg-yellow-500"
-                                                        : "bg-red-500"
+                                                ? "bg-green-500"
+                                                : user.status === "PENDING"
+                                                    ? "bg-yellow-500"
+                                                    : "bg-red-500"
                                                 }`}
                                         />
                                     </div>
@@ -295,12 +235,21 @@ function UsersPage() {
                                             {user.role}
                                         </Badge>
 
-                                        <Badge
-                                            variant="outline"
-                                            className={`${statusStyle[user.status]} text-xs`}
+                                        <Select
+                                            value={user.status}
+                                            onValueChange={(value) =>
+                                                dispatch(updateUserStatus({ userId: user._id, status: value }))
+                                            }
                                         >
-                                            {user.status}
-                                        </Badge>
+                                            <SelectTrigger className="w-28 h-8 text-xs">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                                                <SelectItem value="PENDING">PENDING</SelectItem>
+                                                <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     </div>
 
                                     {/* Meta grid */}
@@ -326,14 +275,13 @@ function UsersPage() {
                         ))}
                     </div>
 
-
                     {/* Pagination (UI only) */}
                     <div className="flex items-center justify-end gap-3 mt-4">
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={handlePrevPage}
                             disabled={!pagination?.hasPrevPage}
+                            onClick={() => setPage(prev => prev - 1)}
                         >
                             <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -345,8 +293,8 @@ function UsersPage() {
                         <Button
                             variant="outline"
                             size="icon"
-                            onClick={handleNextPage}
                             disabled={!pagination?.hasNextPage}
+                            onClick={() => setPage(prev => prev + 1)}
                         >
                             <ChevronRight className="h-4 w-4" />
                         </Button>

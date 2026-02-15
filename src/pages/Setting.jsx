@@ -21,6 +21,7 @@ import { User, Lock, Palette, Bell } from "lucide-react"
 import { useDispatch } from "react-redux";
 import { changePassword } from "../features/slice/userSlice";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 /* ---------------------------------- */
 /* Reusable Toggle Row */
@@ -45,6 +46,7 @@ function SettingToggle({
 
 export default function Settings() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const [currentPassword, setcurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
 
@@ -53,6 +55,7 @@ export default function Settings() {
 
         if (changePassword.fulfilled.match(result)) {
             toast.success(result.payload.message);
+            navigate("/auth/login");
         }
     }
 

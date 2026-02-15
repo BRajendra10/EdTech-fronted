@@ -13,6 +13,7 @@ import { getCurrentUser } from "./features/slice/userSlice.js";
 import Dashboard from "./pages/Dashboard.jsx";
 import CoursesPage from "./pages/Course.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
+import CourseDetail from "./pages/CourseDetail.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -33,7 +34,8 @@ function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="courses" element={<CoursesPage />} />
-            <Route path="enrollments" element={<div className="bg-stone-50 text-stone-900">Welcome to enrollments page.</div>} />
+            <Route path="course/:courseId" element={<CourseDetail />} />
+            <Route path="enrollment" element={<div className="bg-stone-50 text-stone-900">Welcome to enrollments page.</div>} />
             <Route path="modules" element={<div className="bg-stone-50 text-stone-900">Welcome to modules page.</div>} />
           </Route>
 

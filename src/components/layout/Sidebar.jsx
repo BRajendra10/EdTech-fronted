@@ -24,7 +24,7 @@ const menu = [
     { label: "Dashboard", icon: LayoutDashboard, to: "/" },
     { label: "Users", icon: Users, to: "/users" },
     { label: "Courses", icon: BookOpen, to: "/courses" },
-    { label: "Enrollments", icon: GraduationCap, to: "/enrollments" },
+    { label: "Enrollments", icon: GraduationCap, to: "/enrollment" },
 ];
 
 export default function Sidebar() {

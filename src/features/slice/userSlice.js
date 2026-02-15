@@ -35,11 +35,12 @@ export const signup = createAsyncThunk(
 
 export const fetchAllUsers = createAsyncThunk(
     "users/fetchAll",
-    async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
+    async ({ page = 1, limit = 10, role, status, search }, { rejectWithValue }) => {
         try {
-            const response = await api.get(`/users/all?page=${page}&limit=${limit}`);
+            const response = await api.get("/users/all", {
+                params: { page, limit, role, status, search }
+            });
             return response.data.data;
-
         } catch (error) {
             return rejectWithValue(
                 error.response?.data?.message || "Failed to fetch users"
@@ -112,13 +113,56 @@ export const logoutUser = createAsyncThunk(
     }
 );
 
+export const updateUserStatus = createAsyncThunk(
+    "users/updateStatus",
+    async ({ userId, status }, { rejectWithValue }) => {
+        try {
+            const response = await api.patch(
+                `/users/status/${userId}`,
+                { status }
+            );
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to update status"
+            );
+        }
+    }
+);
+
+
+// SELECTOR
+export const selectFilteredUsers = (state) => {
+    const { users, searchTerm, roleFilter, statusFilter } = state.users;
+
+    return users.filter(user => {
+
+        const matchesSearch =
+            user.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesRole =
+            roleFilter === "ALL" || user.role === roleFilter;
+
+        const matchesStatus =
+            statusFilter === "ALL" || user.status === statusFilter;
+
+        return matchesSearch && matchesRole && matchesStatus;
+    });
+};
+
 const initialState = {
     currentUser: null,
     users: [],
     pagination: {},
+
+    searchTerm: "",
+    roleFilter: "ALL",
+    statusFilter: "ALL",
+
     status: "idle",
     error: null
 }
+
 
 const userSlice = createSlice({
     name: "user",
@@ -129,6 +173,7 @@ const userSlice = createSlice({
             state.status = "idle";
             state.error = null;
         },
+
         getCurrentUser: (state) => {
             const storedUser = localStorage.getItem("currentUser");
 
@@ -137,10 +182,24 @@ const userSlice = createSlice({
             } else {
                 state.currentUser = null;
             }
-        }
+        },
+
+        setSearchTerm: (state, action) => {
+            state.searchTerm = action.payload;
+        },
+
+        setRoleFilter: (state, action) => {
+            state.roleFilter = action.payload;
+        },
+
+        setStatusFilter: (state, action) => {
+            state.statusFilter = action.payload;
+        },
+
     },
     extraReducers: (builder) => {
         builder
+            // login user
             .addCase(login.pending, (state) => {
                 state.status = "pending";
                 state.error = null;
@@ -207,6 +266,7 @@ const userSlice = createSlice({
                 state.error = action.payload || "Something went wrong";
             })
 
+            // Logout user
             .addCase(logoutUser.pending, (state) => {
                 state.status = "pending";
             })
@@ -220,6 +280,7 @@ const userSlice = createSlice({
                 state.error = action.payload || "Logout failed";
             })
 
+            // Fetching all users
             .addCase(fetchAllUsers.pending, state => {
                 state.status = "pending";
                 state.error = null;
@@ -237,10 +298,32 @@ const userSlice = createSlice({
             .addCase(fetchAllUsers.rejected, (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload;
-            });
+            })
+
+            // update user status
+            .addCase(updateUserStatus.pending, state => {
+                state.status = "pending";
+                state.error = null;
+            })
+            .addCase(updateUserStatus.fulfilled, (state, action) => {
+                const updatedUser = action.payload;
+
+                const index = state.users.findIndex(
+                    user => user._id === updatedUser._id
+                );
+
+                if (index !== -1) {
+                    state.users[index].status = updatedUser.status;
+                }
+            })
+            .addCase(updateUserStatus.rejected, (state, action) => {
+                state.status = "rejected";
+                state.error = action.payload;
+            })
+
     }
 });
 
 
 export default userSlice.reducer;
-export const { logout, getCurrentUser } = userSlice.actions;
+export const { logout, getCurrentUser, setSearchTerm, setRoleFilter, setStatusFilter } = userSlice.actions;

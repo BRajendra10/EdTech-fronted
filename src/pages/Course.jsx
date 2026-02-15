@@ -1,273 +1,238 @@
-import React from "react";
+import { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, MoreVertical, Eye, Pencil } from "lucide-react";
 import {
-    Plus,
-    Search,
-    MoreVertical,
-    ChevronLeft,
-    ChevronRight,
-    SlidersHorizontal,
-} from "lucide-react";
-
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import {
-    Tabs,
-    TabsList,
-    TabsTrigger,
-    TabsContent,
-} from "@/components/ui/tabs";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    fetchCourses,
+    setStatusFilter,
+    setSearchFilter,
+    setPage,
+} from "../features/slice/courseSlice";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
-const CoursesPage = () => {
+function CoursesPage() {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const debounceRef = useRef(null);
+
+    const { courses, filters, pagination, status } = useSelector(
+        (state) => state.courses
+    );
+
+    useEffect(() => {
+        dispatch(fetchCourses());
+    }, [filters.page, filters.status, filters.search, dispatch]);
+
+    function handleSearch(value) {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        debounceRef.current = setTimeout(() => {
+            dispatch(setSearchFilter(value));
+        }, 400);
+    }
+
+    function handleStatusChange(value) {
+        dispatch(setStatusFilter(value));
+    }
+
+    function handleCourseClick(courseId) {
+        navigate(`/course/${courseId}`);
+    }
+
     return (
-        <div>
-            {/* ================= Header ================= */}
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h2 className="text-xl font-semibold text-slate-900">Courses</h2>
-                    <p className="text-sm text-slate-500">
-                        12 courses · 3 categories
-                    </p>
-                </div>
+        <div className="space-y-6 animate-in fade-in">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Courses</CardTitle>
+                </CardHeader>
 
-                <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-slate-900 text-white rounded-md hover:bg-slate-800 transition">
-                    <Plus size={16} />
-                    New Course
-                </button>
-            </div>
+                <CardContent className="space-y-6">
+                    {/* Filters */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Input
+                            placeholder="Search courses..."
+                            className="sm:max-w-xs"
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
 
-            {/* ================= Tabs + Actions ================= */}
-            <Tabs defaultValue="ALL">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
-                    {/* Tabs */}
-                    <TabsList className="bg-white border border-slate-200 rounded-md p-1 h-auto">
-                        <TabsTrigger value="ALL" className="text-xs">
-                            All
-                        </TabsTrigger>
-                        <TabsTrigger value="PUBLISHED" className="text-xs">
-                            Published
-                        </TabsTrigger>
-                        <TabsTrigger value="DRAFT" className="text-xs">
-                            Draft
-                        </TabsTrigger>
-                        <TabsTrigger value="UNPUBLISHED" className="text-xs">
-                            Unpublished
-                        </TabsTrigger>
-                    </TabsList>
-
-                    {/* Search & Sort */}
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <div className="relative w-full md:w-64">
-                            <Search
-                                size={16}
-                                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                            />
-                            <input
-                                placeholder="Search courses"
-                                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            />
-                        </div>
-
-                        <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-slate-200 rounded-md bg-white hover:bg-slate-100">
-                            <SlidersHorizontal size={16} />
-                            Sort
-                        </button>
-                    </div>
-                </div>
-
-                {/* ================= ALL ================= */}
-                <TabsContent value="ALL">
-                    <CoursesGrid>
-                        <CourseCard
-                            status="PUBLISHED"
-                            title="Backend with Node.js"
-                            description="Build scalable backend services."
-                            price="$49"
-                            image="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800"
-                        />
-                        <CourseCard
-                            status="DRAFT"
-                            title="Advanced React Patterns"
-                            description="Hooks, compound components."
-                            price="Free"
-                            image="https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800"
-                        />
-                        <CourseCard
-                            status="UNPUBLISHED"
-                            title="UI/UX for Developers"
-                            description="Design fundamentals for engineers."
-                            price="$29"
-                            image="https://images.unsplash.com/photo-1558655146-d09347e92766?w=800"
-                        />
-                        <CourseCard
-                            status="PUBLISHED"
-                            title="Docker & Kubernetes"
-                            description="Containerization from scratch."
-                            price="$59"
-                            image="https://images.unsplash.com/photo-1605745341112-85968b193ef5?w=800"
-                        />
-                        <CourseCard
-                            status="DRAFT"
-                            title="Advanced React Patterns"
-                            description="Hooks, compound components."
-                            price="Free"
-                            image="https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800"
-                        />
-                        <CourseCard
-                            status="UNPUBLISHED"
-                            title="UI/UX for Developers"
-                            description="Design fundamentals for engineers."
-                            price="$29"
-                            image="https://images.unsplash.com/photo-1558655146-d09347e92766?w=800"
-                        />
-                        <CourseCard
-                            status="PUBLISHED"
-                            title="Docker & Kubernetes"
-                            description="Containerization from scratch."
-                            price="$59"
-                            image="https://images.unsplash.com/photo-1605745341112-85968b193ef5?w=800"
-                        />
-                        <CourseCard
-                            status="PUBLISHED"
-                            title="Backend with Node.js"
-                            description="Build scalable backend services."
-                            price="$49"
-                            image="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800"
-                        />
-                    </CoursesGrid>
-                </TabsContent>
-
-                {/* ================= PUBLISHED ================= */}
-                <TabsContent value="PUBLISHED">
-                    <CoursesGrid>
-                        <CourseCard
-                            status="PUBLISHED"
-                            title="Backend with Node.js"
-                            description="Build scalable backend services."
-                            price="$49"
-                            image="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800"
-                        />
-                        <CourseCard
-                            status="PUBLISHED"
-                            title="Docker & Kubernetes"
-                            description="Containerization from scratch."
-                            price="$59"
-                            image="https://images.unsplash.com/photo-1605745341112-85968b193ef5?w=800"
-                        />
-                    </CoursesGrid>
-                </TabsContent>
-
-                {/* ================= DRAFT ================= */}
-                <TabsContent value="DRAFT">
-                    <CoursesGrid>
-                        <CourseCard
-                            status="DRAFT"
-                            title="Advanced React Patterns"
-                            description="Hooks, compound components."
-                            price="Free"
-                            image="https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800"
-                        />
-                        <CourseCard
-                            status="DRAFT"
-                            title="Advanced React Patterns"
-                            description="Hooks, compound components."
-                            price="Free"
-                            image="https://images.unsplash.com/photo-1633356122102-3fe601e05bd2?w=800"
-                        />
-                    </CoursesGrid>
-                </TabsContent>
-
-                {/* ================= UNPUBLISHED ================= */}
-                <TabsContent value="UNPUBLISHED">
-                    <CoursesGrid>
-                        <CourseCard
-                            status="UNPUBLISHED"
-                            title="UI/UX for Developers"
-                            description="Design fundamentals for engineers."
-                            price="$29"
-                            image="https://images.unsplash.com/photo-1558655146-d09347e92766?w=800"
-                        />
-                    </CoursesGrid>
-                </TabsContent>
-            </Tabs>
-
-            {/* ================= Pagination ================= */}
-            <div className="flex items-center justify-between mt-8 text-sm">
-                <span className="text-slate-500">Showing 1–4 of 12</span>
-                <div className="flex gap-1">
-                    <button className="p-2 border rounded-md text-slate-500 hover:bg-slate-100">
-                        <ChevronLeft size={16} />
-                    </button>
-                    {[1, 2, 3].map(p => (
-                        <button
-                            key={p}
-                            className={`px-3 py-1.5 rounded-md ${p === 1
-                                    ? "bg-slate-900 text-white"
-                                    : "border hover:bg-slate-100"
-                                }`}
+                        <Select
+                            value={filters.status}
+                            onValueChange={handleStatusChange}
                         >
-                            {p}
-                        </button>
-                    ))}
-                    <button className="p-2 border rounded-md hover:bg-slate-100">
-                        <ChevronRight size={16} />
-                    </button>
-                </div>
-            </div>
+                            <SelectTrigger className="sm:max-w-xs">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                                <SelectItem value="ALL">All Status</SelectItem>
+                                <SelectItem value="PUBLISHED">Published</SelectItem>
+                                <SelectItem value="DRAFT">Draft</SelectItem>
+                                <SelectItem value="UNPUBLISHED">Unpublished</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Loading */}
+                    {status === "pending" && (
+                        <p className="text-muted-foreground text-sm">
+                            Loading courses...
+                        </p>
+                    )}
+
+                    {/* Empty State */}
+                    {status === "fulfilled" && courses.length === 0 && (
+                        <p className="text-muted-foreground text-sm">
+                            No courses found.
+                        </p>
+                    )}
+
+                    {/* Courses Grid */}
+                    {status === "fulfilled" && courses.length > 0 && (
+                        <>
+                            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+
+                                {courses.map((course) => (
+                                    <Card
+                                        key={course._id}
+                                        className="group overflow-hidden border border-border/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-0 gap-0"
+                                    >
+
+                                        {/* Thumbnail */}
+                                        <div>
+                                            <img
+                                                src={course.thumbnail}
+                                                alt={course.title}
+                                                className="h-36 w-full object-cover"
+                                            />
+                                        </div>
+
+                                        <CardContent className="p-4 space-y-4">
+
+                                            {/* Top Row */}
+                                            <div className="flex items-start justify-between gap-3">
+
+                                                <div className="space-y-1">
+                                                    <h3 className="font-semibold leading-snug line-clamp-2 group-hover:text-primary transition">
+                                                        {course.title}
+                                                    </h3>
+
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {course.createdBy?.fullName}
+                                                    </p>
+                                                </div>
+
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <button className="p-1 rounded-md hover:bg-muted transition">
+                                                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                                        </button>
+                                                    </DropdownMenuTrigger>
+
+                                                    <DropdownMenuContent align="end" className="w-40">
+                                                        <DropdownMenuItem
+                                                            onClick={() => handleCourseClick(course._id)}
+                                                            className="flex items-center gap-2"
+                                                        >
+                                                            <Eye className="h-4 w-4 text-muted-foreground" />
+                                                            <span>View</span>
+                                                        </DropdownMenuItem>
+
+                                                        <DropdownMenuSeparator />
+
+                                                        <DropdownMenuItem className="flex items-center gap-2">
+                                                            <Pencil className="h-4 w-4 text-muted-foreground" />
+                                                            <span>Edit</span>
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+
+                                            {/* Description */}
+                                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                                {course.description}
+                                            </p>
+
+                                            {/* Footer */}
+                                            <div className="flex items-center justify-between pt-3 border-t text-sm">
+
+                                                <div className="flex items-center gap-2">
+                                                    {course.isFree ? (
+                                                        <span className="text-green-600 font-medium">Free</span>
+                                                    ) : (
+                                                        <span className="font-medium">₹{course.price}</span>
+                                                    )}
+
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs"
+                                                    >
+                                                        {course.status}
+                                                    </Badge>
+                                                </div>
+
+                                                <span className="text-xs text-muted-foreground">
+                                                    {new Date(course.createdAt).toLocaleDateString()}
+                                                </span>
+                                            </div>
+
+                                        </CardContent>
+                                    </Card>
+
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            <div className="flex items-center justify-end gap-3 mt-4">
+                                <button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={!pagination?.hasPrevPage}
+                                    onClick={() => dispatch(setPage(filters.page - 1))}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+
+                                <span className="text-sm">
+                                    Page {pagination?.page} of {pagination?.totalPages}
+                                </span>
+
+                                <button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={!pagination?.hasNextPage}
+                                    onClick={() => dispatch(setPage(filters.page + 1))}
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                        </>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
-};
-
-/* ================= Grid Wrapper ================= */
-const CoursesGrid = ({ children }) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {children}
-    </div>
-);
-
-/* ================= Course Card ================= */
-const CourseCard = ({ status, title, description, price, image }) => {
-    const statusMap = {
-        PUBLISHED: "bg-emerald-100 text-emerald-700",
-        DRAFT: "bg-amber-100 text-amber-700",
-        UNPUBLISHED: "bg-rose-100 text-rose-700",
-    };
-
-    return (
-        <div className="bg-white border border-slate-200 rounded-md overflow-hidden hover:border-slate-300 transition">
-            <div className="h-36 bg-slate-100">
-                <img
-                    src={image}
-                    alt={title}
-                    className="w-full h-full object-cover"
-                />
-            </div>
-
-            <div className="p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                    <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded ${statusMap[status]}`}
-                    >
-                        {status}
-                    </span>
-                    <MoreVertical size={16} className="text-slate-400" />
-                </div>
-
-                <div>
-                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-2">
-                        {title}
-                    </h3>
-                    <p className="text-xs text-slate-500 line-clamp-2">
-                        {description}
-                    </p>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                    <span className="text-sm font-semibold">{price}</span>
-                    <button className="text-xs font-medium text-indigo-600 hover:underline">
-                        Manage
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
+}
 
 export default CoursesPage;
