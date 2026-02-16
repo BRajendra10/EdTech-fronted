@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, isPending, isRejected } from "@reduxjs/toolkit";
 import api from "../axios.js";
 
 export const enrollInCourse = createAsyncThunk(
@@ -28,18 +28,23 @@ const enrollmentSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(enrollInCourse.pending, (state) => {
-                state.status = "pending";
-                state.error = null;
-            })
+            // Enroll into course
             .addCase(enrollInCourse.fulfilled, (state, action) => {
                 state.status = "fulfilled";
                 state.enrollment = action.payload;
             })
-            .addCase(enrollInCourse.rejected, (state, action) => {
+            
+            // Handle ALL pending states
+            .addMatcher(isPending(enrollInCourse), (state) => {
+                state.status = "pending";
+                state.error = null;
+            })
+
+            // Handle ALL rejected states
+            .addMatcher(isRejected(enrollInCourse), (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload;
-            });
+            })
     },
 });
 

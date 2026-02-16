@@ -1,5 +1,5 @@
 import api from "../axios";
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, isPending, isRejected } from "@reduxjs/toolkit";
 
 /* ==============================
    FETCH ALL COURSES
@@ -45,6 +45,100 @@ export const fetchCourseById = createAsyncThunk(
 );
 
 /* ==============================
+   CREATE COURSE
+================================ */
+export const createCourse = createAsyncThunk(
+    "courses/create",
+    async (courseData, { rejectWithValue }) => {
+        try {
+            const formData = new FormData();
+
+            Object.keys(courseData).forEach((key) => {
+                formData.append(key, courseData[key]);
+            });
+
+            const response = await api.post("/courses/add", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to create course"
+            );
+        }
+    }
+);
+
+/* ==============================
+   ASSIGN COURSE
+================================ */
+export const assignCourse = createAsyncThunk(
+    "courses/assign",
+    async ({ courseId, userId }, { rejectWithValue }) => {
+        try {
+            const response = await api.post("/courses/assign", {
+                courseId,
+                userId,
+            });
+
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to assign course"
+            );
+        }
+    }
+);
+
+export const addModule = createAsyncThunk(
+    "modules/addModule",
+    async ({ courseId, formData }, { rejectWithValue }) => {
+        try {
+            const response = await api.post(
+                `/modules/${courseId}`,
+                formData
+            )
+            return response.data.data
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to add module"
+            )
+        }
+    }
+)
+
+export const addLesson = createAsyncThunk(
+    "lessons/addLesson",
+    async ({ moduleId, lessonData }, { rejectWithValue }) => {
+        try {
+            const formData = new FormData();
+
+            Object.keys(lessonData).forEach((key) => {
+                formData.append(key, lessonData[key]);
+            });
+
+            const response = await api.post(
+                `/lessons/${moduleId}`,
+                formData,
+            );
+
+            return {
+                moduleId,
+                lesson: response.data.data,
+            };
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to add lesson"
+            );
+        }
+    }
+);
+
+
+/* ==============================
    INITIAL STATE
 ================================ */
 const initialState = {
@@ -64,6 +158,10 @@ const initialState = {
     },
     status: "idle",
     error: null,
+    moduleStatus: "idle",
+    moduleError: null,
+    lessonStatus: "idle",
+    lessonError: null,
 };
 
 /* ==============================
@@ -98,10 +196,7 @@ const courseSlice = createSlice({
 
     extraReducers: (builder) => {
         builder
-            .addCase(fetchCourses.pending, (state) => {
-                state.status = "pending";
-                state.error = null;
-            })
+            // Fetching all courses
             .addCase(fetchCourses.fulfilled, (state, action) => {
                 state.status = "fulfilled";
                 state.courses = action.payload.docs;
@@ -114,23 +209,96 @@ const courseSlice = createSlice({
                     hasPrevPage: action.payload.hasPrevPage,
                 };
             })
-            .addCase(fetchCourses.rejected, (state, action) => {
-                state.status = "rejected";
-                state.error = action.payload;
-            })
 
-            .addCase(fetchCourseById.pending, (state) => {
-                state.status = "pending";
-                state.error = null;
-            })
+            // Fetchign course by id
             .addCase(fetchCourseById.fulfilled, (state, action) => {
                 state.status = "fulfilled";
                 state.selectedCourse = action.payload;
             })
-            .addCase(fetchCourseById.rejected, (state, action) => {
+
+            // Creating new course
+            .addCase(createCourse.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+
+                // Add new course to top of list (optional)
+                state.courses.unshift(action.payload);
+            })
+
+            // Assigning course
+            .addCase(assignCourse.fulfilled, (state, action) => {
+                const updatedCourse = action.payload;
+
+                // Update course inside list
+                const index = state.courses.findIndex(
+                    (course) => course._id === updatedCourse._id
+                );
+
+                if (index !== -1) {
+                    state.courses[index] = updatedCourse;
+                }
+
+                // Update selectedCourse if open
+                if (state.selectedCourse?._id === updatedCourse._id) {
+                    state.selectedCourse = updatedCourse;
+                }
+            })
+
+            .addCase(addModule.fulfilled, (state, action) => {
+                state.moduleStatus = "fulfilled"
+
+                if (state.selectedCourse) {
+                    state.selectedCourse.modules = [
+                        ...(state.selectedCourse.modules || []),
+                        action.payload
+                    ]
+                }
+            })
+
+            .addCase(addLesson.fulfilled, (state, action) => {
+                state.lessonStatus = "fulfilled";
+
+                const { moduleId, lesson } = action.payload;
+
+                if (state.selectedCourse?.modules) {
+                    const module = state.selectedCourse.modules.find(
+                        (m) => m._id === moduleId
+                    );
+
+                    if (module) {
+                        module.lessons = [...(module.lessons || []), lesson];
+                    }
+                }
+            })
+
+            // Course matcher
+            .addMatcher(isPending(fetchCourses, fetchCourseById, createCourse, assignCourse), (state) => {
+                state.status = "pending";
+                state.error = null;
+            })
+            .addMatcher(isRejected(fetchCourses, fetchCourseById, createCourse, assignCourse), (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload;
-            });
+            })
+
+            // Modules matcher
+            .addMatcher(isPending(addModule), (state) => {
+                state.moduleStatus = "pending";
+                state.moduleError = null;
+            })
+            .addMatcher(isRejected(addModule), (state, action) => {
+                state.moduleStatus = "rejected";
+                state.moduleError = action.payload;
+            })
+
+            // Lessons matcher
+            .addMatcher(isPending(addLesson), (state) => {
+                state.lessonStatus = "pending";
+                state.lessonError = null;
+            })
+            .addMatcher(isRejected(addLesson), (state, action) => {
+                state.lessonStatus = "rejected";
+                state.lessonError = action.payload;
+            })
     },
 });
 

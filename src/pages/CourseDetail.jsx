@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { fetchCourseById } from "../features/slice/courseSlice"
 import { enrollInCourse } from "../features/slice/enrollmentSlice"
 
@@ -18,13 +18,11 @@ import { toast } from "sonner"
 
 const CourseDetail = () => {
     const dispatch = useDispatch()
+    const navigate = useNavigate();
     const { courseId } = useParams()
     const { selectedCourse, status, error } = useSelector(
         (state) => state.courses
     )
-    const {
-        status: enrollStatus,
-    } = useSelector((state) => state.enrollments)
 
     useEffect(() => {
         if (courseId) dispatch(fetchCourseById(courseId))
@@ -46,12 +44,28 @@ const CourseDetail = () => {
         return `${mins}m ${secs}s`
     }
 
-    const handleEnroll = () => {
+    const handleEnroll = async () => {
         if (!courseId) return
-        dispatch(enrollInCourse(courseId))
 
-        if (enrollStatus === "fullfilled") toast.success("enrolled into course successfully")
+        const result = await dispatch(enrollInCourse(courseId))
+
+        if (enrollInCourse.fulfilled.match(result)) {
+            toast.success("Enrolled successfully")
+        } else {
+            toast.error("Enrollment failed")
+        }
     }
+
+    function handleNavigation() {
+        navigate(`/courses/${courseId}/add-module`, {
+            state: { order: selectedCourse.modules.length + 1 }
+        })
+    }
+
+    const handleAddLesson = (moduleId) => {
+        navigate(`/courses/${selectedCourse._id}/modules/${moduleId}/add-lesson`)
+    }
+
 
     if (status === "loading") {
         return (
@@ -70,170 +84,208 @@ const CourseDetail = () => {
     }
 
     if (!selectedCourse) return null
+    const instructor =
+        selectedCourse.assignedTo || selectedCourse.createdBy;
 
     return (
         <div>
             <div className="grid lg:grid-cols-12 gap-8">
-                <div className="lg:col-span-4 space-y-4">
+                <div className="lg:col-span-4">
+                    <div className="border rounded-2xl overflow-hidden bg-background shadow-sm">
 
-                    {/* Thumbnail */}
-                    <div className="rounded-xl overflow-hidden border">
-                        <img
-                            src={selectedCourse.thumbnail}
-                            alt={selectedCourse.title}
-                            className="w-full h-75 object-cover"
-                        />
-                    </div>
-
-                    {/* Basic Info Card */}
-                    <div className="border rounded-xl p-5 space-y-4">
-
-                        <h1 className="text-xl font-semibold">
-                            {selectedCourse.title}
-                        </h1>
-
-                        <p className="text-sm text-muted-foreground">
-                            {selectedCourse.description}
-                        </p>
-
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="font-medium">
-                                {selectedCourse.isFree
-                                    ? "Free"
-                                    : `₹${selectedCourse.price}`}
-                            </span>
-
-                            <Badge
-                                className={
-                                    selectedCourse.status === "PUBLISHED"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-yellow-100 text-yellow-700"
-                                }
-                            >
-                                {selectedCourse.status}
-                            </Badge>
+                        {/* Thumbnail */}
+                        <div className="aspect-video overflow-hidden">
+                            <img
+                                src={selectedCourse.thumbnail}
+                                alt={selectedCourse.title}
+                                className="w-full h-full object-cover"
+                            />
                         </div>
 
-                        <Separator />
+                        <div className="p-6 space-y-6">
 
-                        {/* Instructor */}
-                        <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
-                                <AvatarImage
-                                    src={
-                                        selectedCourse.assignedTo?.avatar ||
-                                        selectedCourse.createdBy?.avatar
-                                    }
-                                />
-                                <AvatarFallback>
-                                    {(selectedCourse.assignedTo?.fullName ||
-                                        selectedCourse.createdBy?.fullName)?.charAt(0)}
-                                </AvatarFallback>
-                            </Avatar>
+                            {/* Title + Description */}
+                            <div className="space-y-2">
+                                <h1 className="text-xl font-semibold leading-tight">
+                                    {selectedCourse.title}
+                                </h1>
 
-                            <div>
-                                <p className="text-xs text-muted-foreground">
-                                    Instructor
-                                </p>
-                                <p className="text-sm font-medium">
-                                    {selectedCourse.assignedTo?.fullName ||
-                                        selectedCourse.createdBy?.fullName}
+                                <p className="text-sm text-muted-foreground line-clamp-3">
+                                    {selectedCourse.description}
                                 </p>
                             </div>
+
+                            {/* Price + Status */}
+                            <div className="flex items-center justify-between">
+                                <span className="text-lg font-semibold">
+                                    {selectedCourse.isFree
+                                        ? "Free"
+                                        : `₹${selectedCourse.price}`}
+                                </span>
+
+                                <Badge
+                                    className={
+                                        selectedCourse.status === "PUBLISHED"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-yellow-100 text-yellow-700"
+                                    }
+                                >
+                                    {selectedCourse.status}
+                                </Badge>
+                            </div>
+
+                            {/* Instructor */}
+                            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarImage src={instructor?.avatar} />
+                                    <AvatarFallback>
+                                        {instructor?.fullName?.charAt(0) || "?"}
+                                    </AvatarFallback>
+                                </Avatar>
+
+                                <div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Instructor
+                                    </p>
+                                    <p className="text-sm font-medium">
+                                        {selectedCourse.assignedTo?.fullName ||
+                                            selectedCourse.createdBy?.fullName}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="space-y-3">
+
+                                <button
+                                    onClick={handleEnroll}
+                                    disabled={selectedCourse.status !== "PUBLISHED"}
+                                    className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium transition hover:opacity-90"
+                                >
+                                    Enroll Now
+                                </button>
+
+                                <button
+                                    onClick={handleNavigation}
+                                    className="w-full py-2.5 rounded-lg border text-sm font-medium hover:bg-muted transition"
+                                >
+                                    + Add Module
+                                </button>
+
+                            </div>
+
                         </div>
-
-                        <button
-                            onClick={handleEnroll}
-                            className="w-full mt-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
-                        >
-                            Enroll Now
-                        </button>
-
                     </div>
                 </div>
 
-                <div className="lg:col-span-8">
 
-                    <div className="border rounded-xl overflow-hidden">
+                <div className="lg:col-span-8">
+                    <div className="border rounded-xl overflow-hidden bg-background">
 
                         {/* Header */}
-                        <div className="bg-muted px-4 py-3 text-sm font-medium grid grid-cols-12">
+                        <div className="bg-muted px-4 py-3 text-sm font-semibold grid grid-cols-12">
                             <div className="col-span-1">No.</div>
                             <div className="col-span-6">Topics</div>
                             <div className="col-span-3">Duration</div>
                             <div className="col-span-2 text-right">Status</div>
                         </div>
 
-                        {/* Rows */}
-                        {selectedCourse.modules.map((module) => {
-                            const sortedLessons = [...(module.lessons || [])].sort(
-                                (a, b) => a.order - b.order
-                            )
+                        {/* Empty Modules State */}
+                        {(selectedCourse.modules || []).length === 0 ? (
+                            <div className="p-8 text-sm text-muted-foreground flex flex-col items-center justify-center gap-3">
+                                <p>No modules added yet.</p>
+                            </div>
+                        ) : (
+                            selectedCourse.modules.map((module) => {
+                                const sortedLessons = [...(module.lessons || [])].sort(
+                                    (a, b) => a.order - b.order
+                                )
 
-                            return (
-                                <div key={module._id} className="border-t">
+                                return (
+                                    <div key={module._id} className="border-t">
 
-                                    <div
-                                        onClick={() => toggleModule(module._id)}
-                                        className="grid grid-cols-12 px-4 py-3 font-medium bg-muted/30 cursor-pointer hover:bg-muted/50 transition"
-                                    >
-                                        <div className="col-span-1">
-                                            {module.order}
-                                        </div>
-
-                                        <div className="col-span-5">
-                                            {module.title}
-                                        </div>
-
-                                        <div className="col-span-2 text-sm text-muted-foreground">
-                                            {sortedLessons.length} Lessons
-                                        </div>
-
-                                        <div className="col-span-2 text-sm text-muted-foreground">
-                                            {formatDuration(
-                                                sortedLessons.reduce((acc, l) => acc + (l.duration || 0), 0)
-                                            )}
-                                        </div>
-
-                                        <div className="col-span-2 text-right">
-                                            <ChevronDown
-                                                className={`h-4 w-4 ml-auto transition-transform ${openModules[module._id] ? "rotate-180" : ""
-                                                    }`}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {openModules[module._id] &&
-                                        sortedLessons.map((lesson) => (
-
-                                            <div
-                                                key={lesson._id}
-                                                className="grid grid-cols-12 px-4 py-2 text-sm hover:bg-muted/40"
-                                            >
-                                                <div className="col-span-1">
-                                                    {module.order}.{lesson.order}
-                                                </div>
-
-                                                <div className="col-span-6">
-                                                    {lesson.title}
-                                                </div>
-
-                                                <div className="col-span-3 text-muted-foreground">
-                                                    {formatDuration(lesson.duration)}
-                                                </div>
-
-                                                <div className="col-span-2 text-right">
-                                                    -
-                                                </div>
+                                        {/* Module Header */}
+                                        <div
+                                            onClick={() => toggleModule(module._id)}
+                                            className="grid grid-cols-12 px-4 py-3 font-medium bg-muted/30 cursor-pointer hover:bg-muted/50 transition items-center"
+                                        >
+                                            <div className="col-span-1">
+                                                {module.order}
                                             </div>
-                                        ))}
-                                </div>
-                            )
-                        })}
 
+                                            <div className="col-span-5">
+                                                {module.title}
+                                            </div>
+
+                                            <div className="col-span-2 text-sm text-muted-foreground">
+                                                {sortedLessons.length} Lessons
+                                            </div>
+
+                                            <div className="col-span-2 text-sm text-muted-foreground">
+                                                {formatDuration(
+                                                    sortedLessons.reduce((acc, l) => acc + (l.duration || 0), 0)
+                                                )}
+                                            </div>
+
+                                            <div className="col-span-2 flex justify-end items-center gap-3">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        handleAddLesson(module._id)
+                                                    }}
+                                                    className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
+                                                >
+                                                    + Add Lesson
+                                                </button>
+
+                                                <ChevronDown
+                                                    className={`h-4 w-4 transition-transform ${openModules[module._id] ? "rotate-180" : ""
+                                                        }`}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Expanded Content */}
+                                        {openModules[module._id] && (
+                                            <div className="bg-background">
+
+                                                {sortedLessons.length === 0 ? (
+                                                    <div className="px-8 py-4 text-xs text-muted-foreground">
+                                                        No lessons yet. Click “Add Lesson” to get started.
+                                                    </div>
+                                                ) : (
+                                                    sortedLessons.map((lesson) => (
+                                                        <div
+                                                            key={lesson._id}
+                                                            className="grid grid-cols-12 px-8 py-2 text-sm hover:bg-muted/40 transition items-center"
+                                                        >
+                                                            <div className="col-span-1">
+                                                                {module.order}.{lesson.order}
+                                                            </div>
+
+                                                            <div className="col-span-6">
+                                                                {lesson.title}
+                                                            </div>
+
+                                                            <div className="col-span-3 text-muted-foreground">
+                                                                {formatDuration(lesson.duration)}
+                                                            </div>
+
+                                                            <div className="col-span-2 text-right text-muted-foreground">
+                                                                Draft
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )
+                            })
+                        )}
                     </div>
-
                 </div>
+
             </div>
         </div>
     )

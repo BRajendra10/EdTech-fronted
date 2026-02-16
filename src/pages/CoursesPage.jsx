@@ -39,6 +39,7 @@ function CoursesPage() {
     const { courses, filters, pagination, status } = useSelector(
         (state) => state.courses
     );
+    const { currentUser } = useSelector((state) => state.users);
 
     useEffect(() => {
         dispatch(fetchCourses());
@@ -63,9 +64,19 @@ function CoursesPage() {
     return (
         <div className="space-y-6 animate-in fade-in">
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Courses</CardTitle>
+
+                    {currentUser?.role !== "STUDENT" && (
+                        <button
+                            onClick={() => navigate("/course/create")}
+                            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:opacity-90 transition"
+                        >
+                            + Add Course
+                        </button>
+                    )}
                 </CardHeader>
+
 
                 <CardContent className="space-y-6">
                     {/* Filters */}

@@ -39,7 +39,8 @@ function UsersPage() {
     const debounceRef = useRef(null);
     const limit = 10;
 
-    const { users, pagination, searchTerm, roleFilter, statusFilter } = useSelector((state) => state.users);
+    const { currentUser, users, pagination, searchTerm, roleFilter, statusFilter } = useSelector((state) => state.users);
+    console.log(currentUser);
 
     useEffect(() => {
         dispatch(
@@ -157,21 +158,30 @@ function UsersPage() {
                                         </TableCell>
 
                                         <TableCell>
-                                            <Select
-                                                value={user.status}
-                                                onValueChange={(value) =>
-                                                    dispatch(updateUserStatus({ userId: user._id, status: value }))
-                                                }
-                                            >
-                                                <SelectTrigger className="w-28 h-8 text-xs">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                                                    <SelectItem value="PENDING">PENDING</SelectItem>
-                                                    <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            {currentUser?.role !== "STUDENT" ? (
+                                                <Select
+                                                    value={user.status}
+                                                    onValueChange={(value) =>
+                                                        dispatch(updateUserStatus({ userId: user._id, status: value }))
+                                                    }
+                                                >
+                                                    <SelectTrigger className="w-28 h-8 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                                                        <SelectItem value="PENDING">PENDING</SelectItem>
+                                                        <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <Badge
+                                                    variant="outline" className="text-xs"
+                                                // className={roleStyle[user.role]}
+                                                >
+                                                    {user.status}
+                                                </Badge>
+                                            )}
                                         </TableCell>
 
                                         <TableCell>

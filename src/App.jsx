@@ -11,9 +11,12 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getCurrentUser } from "./features/slice/userSlice.js";
 import Dashboard from "./pages/Dashboard.jsx";
-import CoursesPage from "./pages/Course.jsx";
+import CoursesPage from "./pages/CoursesPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 import CourseDetail from "./pages/CourseDetail.jsx";
+import CreateCoursePage from "./pages/CreateCoursePage.jsx";
+import AddModule from "./AddModules.jsx";
+import AddLessonPage from "./pages/AddLessonPage.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -34,9 +37,15 @@ function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="courses" element={<CoursesPage />} />
+            <Route path="/course/create" element={<CreateCoursePage />} />
             <Route path="course/:courseId" element={<CourseDetail />} />
             <Route path="enrollment" element={<div className="bg-stone-50 text-stone-900">Welcome to enrollments page.</div>} />
             <Route path="modules" element={<div className="bg-stone-50 text-stone-900">Welcome to modules page.</div>} />
+            <Route path="/courses/:courseId/add-module" element={<AddModule />} />
+            <Route
+              path="/courses/:courseId/modules/:moduleId/add-lesson"
+              element={<AddLessonPage />}
+            />
           </Route>
 
 
