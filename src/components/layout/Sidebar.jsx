@@ -19,6 +19,7 @@ import {
 } from "../ui/sidebar";
 
 import { NavUser } from "../custom/navUser";
+import { useSelector } from "react-redux";
 
 const menu = [
     { label: "Dashboard", icon: LayoutDashboard, to: "/" },
@@ -28,18 +29,7 @@ const menu = [
 ];
 
 export default function Sidebar() {
-    const currentUser = {
-        _id: "6980048560f14573647c98c6",
-        fullName: "Rajendra Behera",
-        email: "rajendrabehera8116@gmail.com",
-        role: "ADMIN",
-        isEmailVerified: true,
-        status: "ACTIVE",
-        avatar: "https://res.cloudinary.com/ddgpr2qfa/image/upload/v1769953421/avatar_backend_image_mxniew.jpg",
-        isBlocked: false,
-        createdAt: "2026-02-02T01:57:25.350+00:00",
-        updatedAt: "2026-02-03T03:04:26.311+00:00"
-    }
+    const { currentUser } = useSelector(state => state.users)
 
 
     return (
@@ -63,7 +53,7 @@ export default function Sidebar() {
                     </p>
 
                     <SidebarMenu>
-                        {menu.map(({ label, icon: Icon, to }, index) => (
+                        {menu.map(({ label, icon: Icon, to }, index) => (label !== "Users" && currentUser?.role === "STUDENT") && (
                             <SidebarMenuItem key={index}>
                                 <NavLink
                                     to={to}

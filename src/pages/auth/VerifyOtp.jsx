@@ -17,6 +17,10 @@ export default function VerifyOtp() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    const userId = localStorage.getItem("verifyUserId");
+
+    console.log(userId);
+
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200">
             <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
@@ -36,7 +40,7 @@ export default function VerifyOtp() {
                     onSubmit={async (values) => {
                         console.log(values);
 
-                        const result = await dispatch(verifyOtp({ userId: "6981bd9ee8dcda2dca7efcb8", verificationCode: values.otp }))
+                        const result = await dispatch(verifyOtp({ userId: userId, verificationCode: values.otp }))
 
                         if (verifyOtp.fulfilled.match(result)) {
                             toast.success(result.payload.message);
@@ -104,9 +108,6 @@ export default function VerifyOtp() {
                     <button
                         className="font-medium text-purple-600 hover:underline"
                         onClick={async () => {
-                            const userId = localStorage.getItem("verifyUserId");
-                            if (!userId) return;
-
                             const result = await dispatch(
                                 resendVerificationOtp({ userId })
                             );

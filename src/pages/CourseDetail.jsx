@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
-import { useNavigate, useParams } from "react-router-dom"
+import { useParams } from "react-router-dom"
 import { fetchCourseById } from "../features/slice/courseSlice"
 import { enrollInCourse } from "../features/slice/enrollmentSlice"
 
@@ -15,14 +15,20 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
+import AddLessonDrawer from "./AddLessonPage"
+import AddModuleModal from "./AddModules"
 
 const CourseDetail = () => {
+    const [isLessonOpen, setIsLessonOpen] = useState(false)
+    const [selectedModuleId, setSelectedModuleId] = useState(null)
+    const [isModuleOpen, setIsModuleOpen] = useState(false)
+
     const dispatch = useDispatch()
-    const navigate = useNavigate();
     const { courseId } = useParams()
     const { selectedCourse, status, error } = useSelector(
         (state) => state.courses
     )
+    const { currentUser } = useSelector(state => state.users);
 
     useEffect(() => {
         if (courseId) dispatch(fetchCourseById(courseId))
@@ -56,15 +62,12 @@ const CourseDetail = () => {
         }
     }
 
-    function handleNavigation() {
-        navigate(`/courses/${courseId}/add-module`, {
-            state: { order: selectedCourse.modules.length + 1 }
-        })
-    }
+    const nextModuleOrder = useMemo(() => {
+        if (!selectedCourse?.modules?.length) return 1
+        const max = Math.max(...selectedCourse.modules.map(m => m.order))
+        return max + 1
+    }, [selectedCourse])
 
-    const handleAddLesson = (moduleId) => {
-        navigate(`/courses/${selectedCourse._id}/modules/${moduleId}/add-lesson`)
-    }
 
 
     if (status === "loading") {
@@ -165,12 +168,14 @@ const CourseDetail = () => {
                                     Enroll Now
                                 </button>
 
-                                <button
-                                    onClick={handleNavigation}
-                                    className="w-full py-2.5 rounded-lg border text-sm font-medium hover:bg-muted transition"
-                                >
-                                    + Add Module
-                                </button>
+                                {currentUser.role !== "STUDENT" && (
+                                    <button
+                                        onClick={() => setIsModuleOpen(true)}
+                                        className="w-full py-2.5 rounded-lg border text-sm font-medium hover:bg-muted transition"
+                                    >
+                                        + Add Module
+                                    </button>
+                                )}
 
                             </div>
 
@@ -228,15 +233,18 @@ const CourseDetail = () => {
                                             </div>
 
                                             <div className="col-span-2 flex justify-end items-center gap-3">
-                                                <button
-                                                    onClick={(e) => {
-                                                        e.stopPropagation()
-                                                        handleAddLesson(module._id)
-                                                    }}
-                                                    className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
-                                                >
-                                                    + Add Lesson
-                                                </button>
+                                                {currentUser.role !== "STUDENT" && (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setSelectedModuleId(module._id)
+                                                            setIsLessonOpen(true)
+                                                        }}
+                                                        className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
+                                                    >
+                                                        + Add Lesson
+                                                    </button>
+                                                )}
 
                                                 <ChevronDown
                                                     className={`h-4 w-4 transition-transform ${openModules[module._id] ? "rotate-180" : ""
@@ -287,6 +295,20 @@ const CourseDetail = () => {
                 </div>
 
             </div>
+
+            <AddLessonDrawer
+                isOpen={isLessonOpen}
+                onClose={() => setIsLessonOpen(false)}
+                moduleId={selectedModuleId}
+            />
+
+            <AddModuleModal
+                isOpen={isModuleOpen}
+                onClose={() => setIsModuleOpen(false)}
+                courseId={selectedCourse._id}
+                order={nextModuleOrder}
+            />
+
         </div>
     )
 }

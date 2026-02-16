@@ -1,20 +1,17 @@
 import { useEffect, useMemo } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { useNavigate, useParams } from "react-router-dom"
 import { addLesson } from "../features/slice/courseSlice"
 import { useFormik } from "formik"
 import * as Yup from "yup"
 
-const AddLessonPage = () => {
-    const { moduleId, courseId } = useParams()
+const AddLessonModal = ({ isOpen, onClose, moduleId }) => {
     const dispatch = useDispatch()
-    const navigate = useNavigate()
 
     const { selectedCourse, lessonStatus, lessonError } = useSelector(
         (state) => state.courses
     )
 
-    // 🔥 Auto-calculate next order
+    // Auto-calc order
     const nextOrder = useMemo(() => {
         const module = selectedCourse?.modules?.find(
             (m) => m._id === moduleId
@@ -26,18 +23,22 @@ const AddLessonPage = () => {
         return maxOrder + 1
     }, [selectedCourse, moduleId])
 
+    // ESC close
     useEffect(() => {
-        if (lessonStatus === "fulfilled") {
-            navigate(`/courses/${courseId}`)
+        const handleEsc = (e) => {
+            if (e.key === "Escape" && lessonStatus !== "pending") {
+                onClose()
+            }
         }
-    }, [lessonStatus, navigate, courseId])
+        window.addEventListener("keydown", handleEsc)
+        return () => window.removeEventListener("keydown", handleEsc)
+    }, [lessonStatus, onClose])
 
     const validationSchema = Yup.object({
         title: Yup.string()
             .required("Lesson title is required")
-            .min(3, "Title must be at least 3 characters"),
-        videoFile: Yup.mixed()
-            .required("Video file is required"),
+            .min(3, "Minimum 3 characters"),
+        videoFile: Yup.mixed().required("Video file is required"),
         thumbnail: Yup.mixed().nullable(),
     })
 
@@ -60,25 +61,53 @@ const AddLessonPage = () => {
                     },
                 })
             )
+
+            formik.resetForm();
         },
     })
 
-    return (
-        <div className="max-w-3xl mx-auto py-10 px-6">
-            <div className="border rounded-xl p-8 space-y-6 bg-background shadow-sm">
+    if (!isOpen) return null
 
-                <div>
-                    <h1 className="text-2xl font-semibold">Add New Lesson</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                        Lesson will be added as #{nextOrder}
-                    </p>
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            onClick={() => {
+                if (lessonStatus !== "pending") onClose()
+            }}
+        >
+            {/* Modal */}
+            <div
+                className="bg-white w-full max-w-lg rounded-xl shadow-xl p-8 relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex justify-between items-start mb-6">
+                    <div>
+                        <h2 className="text-xl font-semibold">
+                            Add New Lesson
+                        </h2>
+                        <p className="text-sm text-muted-foreground">
+                            Lesson will be added as #{nextOrder}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={onClose}
+                        disabled={lessonStatus === "pending"}
+                        className="text-sm hover:opacity-60"
+                    >
+                        ✕
+                    </button>
                 </div>
 
+                {/* Form */}
                 <form onSubmit={formik.handleSubmit} className="space-y-5">
 
                     {/* Title */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Lesson Title</label>
+                        <label className="text-sm font-medium">
+                            Lesson Title
+                        </label>
                         <input
                             type="text"
                             name="title"
@@ -94,9 +123,11 @@ const AddLessonPage = () => {
                         )}
                     </div>
 
-                    {/* Video Upload */}
+                    {/* Video */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Video File</label>
+                        <label className="text-sm font-medium">
+                            Video File
+                        </label>
                         <input
                             type="file"
                             accept="video/*"
@@ -107,14 +138,14 @@ const AddLessonPage = () => {
                                 )
                             }
                         />
-                        {formik.touched.videoFile && formik.errors.videoFile && (
+                        {formik.errors.videoFile && (
                             <p className="text-xs text-red-500">
                                 {formik.errors.videoFile}
                             </p>
                         )}
                     </div>
 
-                    {/* Thumbnail Upload */}
+                    {/* Thumbnail */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">
                             Thumbnail (Optional)
@@ -152,4 +183,4 @@ const AddLessonPage = () => {
     )
 }
 
-export default AddLessonPage
+export default AddLessonModal
