@@ -15,13 +15,17 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
-import AddLessonDrawer from "./AddLessonPage"
-import AddModuleModal from "./AddModules"
+import AddLessonDrawer from "../components/AddLessons"
+import AddModuleModal from "../components/AddModules"
+import EditModules from "../components/EditModules"
+import EditLesson from "../components/EditLessons"
 
 const CourseDetail = () => {
     const [isLessonOpen, setIsLessonOpen] = useState(false)
     const [selectedModuleId, setSelectedModuleId] = useState(null)
     const [isModuleOpen, setIsModuleOpen] = useState(false)
+    const [editingModule, setEditingModule] = useState(null)
+    const [editingLesson, setEditingLesson] = useState(null)
 
     const dispatch = useDispatch()
     const { courseId } = useParams()
@@ -234,16 +238,28 @@ const CourseDetail = () => {
 
                                             <div className="col-span-2 flex justify-end items-center gap-3">
                                                 {currentUser.role !== "STUDENT" && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation()
-                                                            setSelectedModuleId(module._id)
-                                                            setIsLessonOpen(true)
-                                                        }}
-                                                        className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
-                                                    >
-                                                        + Add Lesson
-                                                    </button>
+                                                    <>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setEditingModule(module)
+                                                            }}
+                                                            className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
+                                                        >
+                                                            Edit
+                                                        </button>
+
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                setSelectedModuleId(module._id)
+                                                                setIsLessonOpen(true)
+                                                            }}
+                                                            className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
+                                                        >
+                                                            + Add Lesson
+                                                        </button>
+                                                    </>
                                                 )}
 
                                                 <ChevronDown
@@ -279,9 +295,21 @@ const CourseDetail = () => {
                                                                 {formatDuration(lesson.duration)}
                                                             </div>
 
-                                                            <div className="col-span-2 text-right text-muted-foreground">
-                                                                Draft
+                                                            <div className="col-span-2 flex justify-end items-center gap-2">
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Draft
+                                                                </span>
+
+                                                                {currentUser.role !== "STUDENT" && (
+                                                                    <button
+                                                                        onClick={() => setEditingLesson(lesson)}
+                                                                        className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
+                                                                    >
+                                                                        Edit
+                                                                    </button>
+                                                                )}
                                                             </div>
+
                                                         </div>
                                                     ))
                                                 )}
@@ -309,6 +337,17 @@ const CourseDetail = () => {
                 order={nextModuleOrder}
             />
 
+            <EditModules
+                isOpen={editingModule}
+                onClose={() => setEditingModule(null)}
+                module={editingModule}
+            />
+
+            <EditLesson
+                isOpen={!!editingLesson}
+                onClose={() => setEditingLesson(null)}
+                lesson={editingLesson}
+            />
         </div>
     )
 }

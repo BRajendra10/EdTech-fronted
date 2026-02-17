@@ -1,9 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, MoreVertical, Eye, Pencil } from "lucide-react";
+import CreateCourseModal from "../components/AddCourses";
+import EditCourse from "../components/EditCourse";
+
 import {
     Card,
     CardContent,
@@ -32,6 +35,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 function CoursesPage() {
+    const [isOpen, setIsOpen] = useState(false)
+    const [editCourseOpen, setEditCourseOpen] = useState(false);
+    const [selectedCourse, setSelectedCourse] = useState({});
+
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const debounceRef = useRef(null);
@@ -69,7 +76,7 @@ function CoursesPage() {
 
                     {currentUser?.role !== "STUDENT" && (
                         <button
-                            onClick={() => navigate("/course/create")}
+                            onClick={() => setIsOpen(true)}
                             className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:opacity-90 transition"
                         >
                             + Add Course
@@ -169,12 +176,21 @@ function CoursesPage() {
                                                             <span>View</span>
                                                         </DropdownMenuItem>
 
-                                                        <DropdownMenuSeparator />
-
-                                                        <DropdownMenuItem className="flex items-center gap-2">
-                                                            <Pencil className="h-4 w-4 text-muted-foreground" />
-                                                            <span>Edit</span>
-                                                        </DropdownMenuItem>
+                                                        {currentUser.role !== "STUDENT" && (
+                                                            <>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    onClick={() => {
+                                                                        setSelectedCourse(course)
+                                                                        setEditCourseOpen(true)
+                                                                    }}
+                                                                    className="flex items-center gap-2"
+                                                                >
+                                                                    <Pencil className="h-4 w-4 text-muted-foreground" />
+                                                                    <span>Edit</span>
+                                                                </DropdownMenuItem>
+                                                            </>
+                                                        )}
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </div>
@@ -242,6 +258,17 @@ function CoursesPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <CreateCourseModal
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+            />
+
+            <EditCourse
+                isOpen={editCourseOpen}
+                onClose={() => setEditCourseOpen(false)}
+                course={selectedCourse}
+            />
         </div>
     );
 }

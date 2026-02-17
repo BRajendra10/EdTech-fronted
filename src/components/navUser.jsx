@@ -11,7 +11,7 @@ import {
     Avatar,
     AvatarFallback,
     AvatarImage,
-} from "../ui/avatar"
+} from "./ui/avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -20,15 +20,15 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "../ui/dropdown-menu"
+} from "./ui/dropdown-menu"
 import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
     useSidebar,
-} from "../ui/sidebar"
+} from "./ui/sidebar"
 import { useDispatch } from "react-redux"
-import { logoutUser } from "../../features/slice/userSlice"
+import { logoutUser } from "../features/slice/userSlice"
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom"
 

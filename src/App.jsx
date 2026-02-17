@@ -11,10 +11,10 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getCurrentUser } from "./features/slice/userSlice.js";
 import Dashboard from "./pages/Dashboard.jsx";
-import CoursesPage from "./pages/CoursesPage.jsx";
-import UsersPage from "./pages/UsersPage.jsx";
+import CoursesPage from "./pages/Courses.jsx";
+import UsersPage from "./pages/Users.jsx";
 import CourseDetail from "./pages/CourseDetail.jsx";
-import CreateCoursePage from "./pages/CreateCoursePage.jsx";
+import CreateCoursePage from "./components/AddCourses.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -35,10 +35,8 @@ function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="courses" element={<CoursesPage />} />
-            <Route path="/course/create" element={<CreateCoursePage />} />
             <Route path="course/:courseId" element={<CourseDetail />} />
             <Route path="enrollment" element={<div className="bg-stone-50 text-stone-900">Welcome to enrollments page.</div>} />
-            <Route path="modules" element={<div className="bg-stone-50 text-stone-900">Welcome to modules page.</div>} />
           </Route>
 
 

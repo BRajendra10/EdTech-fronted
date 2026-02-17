@@ -18,19 +18,22 @@ import {
     SidebarMenuItem,
 } from "../ui/sidebar";
 
-import { NavUser } from "../custom/navUser";
+import { NavUser } from "../navUser";
 import { useSelector } from "react-redux";
 
 const menu = [
-    { label: "Dashboard", icon: LayoutDashboard, to: "/" },
-    { label: "Users", icon: Users, to: "/users" },
-    { label: "Courses", icon: BookOpen, to: "/courses" },
-    { label: "Enrollments", icon: GraduationCap, to: "/enrollment" },
+    { label: "Dashboard", icon: LayoutDashboard, to: "/", roles: ["ADMIN", "INSTRUCTOR", "STUDENT"] },
+    { label: "Users", icon: Users, to: "/users", roles: ["ADMIN", "INSTRUCTOR"] },
+    { label: "Courses", icon: BookOpen, to: "/courses", roles: ["ADMIN", "INSTRUCTOR", "STUDENT"] },
+    { label: "Enrollments", icon: GraduationCap, to: "/enrollment", roles: ["ADMIN", "INSTRUCTOR", "STUDENT"] },
 ];
 
 export default function Sidebar() {
     const { currentUser } = useSelector(state => state.users)
 
+    const filteredMenu = menu.filter(item =>
+        item.roles.includes(currentUser?.role)
+    )
 
     return (
         <Aside className="w-64 bg-slate-50 text-slate-900 flex flex-col">
@@ -53,7 +56,7 @@ export default function Sidebar() {
                     </p>
 
                     <SidebarMenu>
-                        {menu.map(({ label, icon: Icon, to }, index) => (label !== "Users" && currentUser?.role === "STUDENT") && (
+                        {filteredMenu.map(({ label, icon: Icon, to }, index) => (
                             <SidebarMenuItem key={index}>
                                 <NavLink
                                     to={to}

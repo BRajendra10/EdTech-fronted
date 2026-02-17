@@ -137,6 +137,63 @@ export const addLesson = createAsyncThunk(
     }
 );
 
+/* ==============================
+   UPDATE COURSE
+================================ */
+export const updateCourse = createAsyncThunk(
+    "courses/updateCourse",
+    async (formData, { rejectWithValue }) => {
+        try {
+            const response = await api.patch(
+                "/courses",
+                formData
+            );
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to update course"
+            );
+        }
+    }
+);
+
+
+/* ==============================
+   UPDATE MODULE
+================================ */
+export const updateModule = createAsyncThunk(
+    "modules/updateModule",
+    async ({ moduleId, formDataValues }, { rejectWithValue }) => {
+        try {
+            const response = await api.patch(`/modules/${moduleId}`, formDataValues);
+
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to update module"
+            );
+        }
+    }
+);
+
+/* ==============================
+   UPDATE LESSON
+================================ */
+export const updateLesson = createAsyncThunk(
+    "lessons/updateLesson",
+    async ({ lessonId, formData }, { rejectWithValue }) => {
+        try {
+            const response = await api.patch(`/lessons/${lessonId}`, formData);
+
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to update lesson"
+            );
+        }
+    }
+);
+
 
 /* ==============================
    INITIAL STATE
@@ -243,6 +300,24 @@ const courseSlice = createSlice({
                 }
             })
 
+            .addCase(updateCourse.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+
+                const updatedCourse = action.payload;
+
+                const index = state.courses.findIndex(
+                    (c) => c._id === updatedCourse._id
+                );
+
+                if (index !== -1) {
+                    state.courses[index] = updatedCourse;
+                }
+
+                if (state.selectedCourse?._id === updatedCourse._id) {
+                    state.selectedCourse = updatedCourse;
+                }
+            })
+
             .addCase(addModule.fulfilled, (state, action) => {
                 state.moduleStatus = "fulfilled"
 
@@ -253,6 +328,23 @@ const courseSlice = createSlice({
                     ]
                 }
             })
+
+            .addCase(updateModule.fulfilled, (state, action) => {
+                state.moduleStatus = "fulfilled";
+
+                const updatedModule = action.payload;
+
+                if (state.selectedCourse?.modules) {
+                    const index = state.selectedCourse.modules.findIndex(
+                        (m) => m._id === updatedModule._id
+                    );
+
+                    if (index !== -1) {
+                        state.selectedCourse.modules[index] = updatedModule;
+                    }
+                }
+            })
+
 
             .addCase(addLesson.fulfilled, (state, action) => {
                 state.lessonStatus = "fulfilled";
@@ -270,32 +362,51 @@ const courseSlice = createSlice({
                 }
             })
 
+            .addCase(updateLesson.fulfilled, (state, action) => {
+                state.lessonStatus = "fulfilled";
+
+                const updatedLesson = action.payload;
+
+                if (state.selectedCourse?.modules) {
+                    state.selectedCourse.modules.forEach((module) => {
+                        const lessonIndex = module.lessons?.findIndex(
+                            (l) => l._id === updatedLesson._id
+                        );
+
+                        if (lessonIndex !== -1 && lessonIndex !== undefined) {
+                            module.lessons[lessonIndex] = updatedLesson;
+                        }
+                    });
+                }
+            })
+
+
             // Course matcher
-            .addMatcher(isPending(fetchCourses, fetchCourseById, createCourse, assignCourse), (state) => {
+            .addMatcher(isPending(fetchCourses, fetchCourseById, createCourse, assignCourse, updateCourse), (state) => {
                 state.status = "pending";
                 state.error = null;
             })
-            .addMatcher(isRejected(fetchCourses, fetchCourseById, createCourse, assignCourse), (state, action) => {
+            .addMatcher(isRejected(fetchCourses, fetchCourseById, createCourse, assignCourse, updateCourse), (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload;
             })
 
             // Modules matcher
-            .addMatcher(isPending(addModule), (state) => {
+            .addMatcher(isPending(addModule, updateModule), (state) => {
                 state.moduleStatus = "pending";
                 state.moduleError = null;
             })
-            .addMatcher(isRejected(addModule), (state, action) => {
+            .addMatcher(isRejected(addModule, updateModule), (state, action) => {
                 state.moduleStatus = "rejected";
                 state.moduleError = action.payload;
             })
 
             // Lessons matcher
-            .addMatcher(isPending(addLesson), (state) => {
+            .addMatcher(isPending(addLesson, updateLesson), (state) => {
                 state.lessonStatus = "pending";
                 state.lessonError = null;
             })
-            .addMatcher(isRejected(addLesson), (state, action) => {
+            .addMatcher(isRejected(addLesson, updateLesson), (state, action) => {
                 state.lessonStatus = "rejected";
                 state.lessonError = action.payload;
             })
