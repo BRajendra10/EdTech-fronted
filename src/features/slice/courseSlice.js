@@ -194,6 +194,19 @@ export const updateLesson = createAsyncThunk(
     }
 );
 
+export const updateCourseStatus = createAsyncThunk(
+    "courses/updateCourseStatus",
+    async ({ courseId, status }, { rejectWithValue }) => {
+        try {
+            const response = await api.patch("/courses/status", { courseId, status });
+
+            return response.data.data; // returns updated course
+        } catch (err) {
+            return rejectWithValue(err.response?.data?.message || "Failed to update status");
+        }
+    }
+);
+
 
 /* ==============================
    INITIAL STATE
@@ -380,6 +393,12 @@ const courseSlice = createSlice({
                 }
             })
 
+            .addCase(updateCourseStatus.fulfilled, (state, action) => {
+                const index = state.courses.findIndex(c => c._id === action.payload._id);
+                if (index !== -1) {
+                    state.courses[index].status = action.payload.status;
+                }
+            })
 
             // Course matcher
             .addMatcher(isPending(fetchCourses, fetchCourseById, createCourse, assignCourse, updateCourse), (state) => {

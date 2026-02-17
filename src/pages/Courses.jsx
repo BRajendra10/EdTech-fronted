@@ -25,6 +25,7 @@ import {
     setStatusFilter,
     setSearchFilter,
     setPage,
+    updateCourseStatus,
 } from "../features/slice/courseSlice";
 import {
     DropdownMenu,
@@ -176,7 +177,7 @@ function CoursesPage() {
                                                             <span>View</span>
                                                         </DropdownMenuItem>
 
-                                                        {currentUser.role !== "STUDENT" && (
+                                                        {currentUser?.role !== "STUDENT" && (
                                                             <>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuItem
@@ -210,12 +211,30 @@ function CoursesPage() {
                                                         <span className="font-medium">₹{course.price}</span>
                                                     )}
 
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-xs"
-                                                    >
-                                                        {course.status}
-                                                    </Badge>
+                                                    <div className="flex items-center gap-2">
+                                                        {currentUser?.role !== "STUDENT" ? (
+                                                            <Select
+                                                                value={course.status}
+                                                                onValueChange={(value) =>
+                                                                    dispatch(updateCourseStatus({ courseId: course._id, status: value }))
+                                                                }
+                                                            >
+                                                                <SelectTrigger className="w-28 h-8 text-xs">
+                                                                    <SelectValue />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    <SelectItem value="PUBLISHED">PUBLISHED</SelectItem>
+                                                                    <SelectItem value="DRAFT">DRAFT</SelectItem>
+                                                                    <SelectItem value="UNPUBLISHED">UNPUBLISHED</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                        ) : (
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                {course.status}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+
                                                 </div>
 
                                                 <span className="text-xs text-muted-foreground">
