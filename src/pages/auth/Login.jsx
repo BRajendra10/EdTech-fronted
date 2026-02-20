@@ -1,93 +1,149 @@
-import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import { login } from "../../features/slice/userSlice";
-import { useDispatch } from "react-redux";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-
-const loginSchema = Yup.object({
-    email: Yup.string()
-        .email("Enter a valid email")
-        .required("Email is required"),
-    password: Yup.string()
-        .required("Password is required"),
-});
+import { useNavigate } from "react-router-dom"
+import { useDispatch } from "react-redux"
+import { login } from "../../features/slice/userSlice"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
+import AuthLayout from "./AuthLayout"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
+import { useFormik } from "formik"
+import * as Yup from "yup"
 
 export default function Login() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
+    const [showPassword, setShowPassword] = useState(false)
+
+    // ✅ Validation Schema
+    const validationSchema = Yup.object({
+        email: Yup.string()
+            .email("Invalid email format")
+            .required("Email is required"),
+        password: Yup.string()
+            .min(6, "Password must be at least 6 characters")
+            .required("Password is required"),
+    })
+
+    const formik = useFormik({
+        initialValues: {
+            email: "",
+            password: "",
+        },
+        validationSchema,
+        onSubmit: async (values, { setSubmitting }) => {
+            try {
+                await dispatch(login(values)).unwrap()
+                toast.success("Login successful")
+                navigate("/")
+            } catch (error) {
+                if (error === "Please verify your email first") {
+                    navigate("/verify-otp", {
+                        state: { email: values.email },
+                    })
+                } else {
+                    toast.error(error || "Login failed")
+                }
+            } finally {
+                setSubmitting(false)
+            }
+        },
+    })
 
     return (
-        <Formik
-            initialValues={{ email: "", password: "" }}
-            validationSchema={loginSchema}
-            onSubmit={async (values, { resetForm }) => {
-                const result = await dispatch(login(values));
-                // console.log(result);
-
-                if (login.fulfilled.match(result)) {
-                    toast.success(result.payload.message);
-
-                    localStorage.setItem("currentUser", JSON.stringify(result.payload.data))
-
-                    resetForm();
-                    navigate("/");
-                }
-            }}
+        <AuthLayout
+            title="Welcome back"
+            subtitle="Login to continue your learning journey"
         >
-            <Form className="space-y-4">
+            <form onSubmit={formik.handleSubmit} className="space-y-6">
+
                 {/* Email */}
-                <div>
-                    <label
-                        htmlFor="email"
-                        className="block text-sm font-medium text-foreground mb-1"
-                    >
-                        Email address
-                    </label>
-                    <Field
+                <div className="space-y-2">
+                    <Label className="text-[#1E1E2C] font-medium">
+                        Email
+                    </Label>
+                    <Input
                         name="email"
                         type="email"
-                        id="email"
-                        placeholder="you@example.com"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        value={formik.values.email}
+                        className="h-11 rounded-xl focus-visible:ring-2 focus-visible:ring-[#F29F67]"
                     />
-                    <ErrorMessage
-                        name="email"
-                        component="p"
-                        className="mt-1 text-xs text-red-500"
-                    />
+                    {formik.touched.email && formik.errors.email && (
+                        <p className="text-red-500 text-sm">
+                            {formik.errors.email}
+                        </p>
+                    )}
                 </div>
 
                 {/* Password */}
-                <div>
-                    <label
-                        htmlFor="password"
-                        className="block text-sm font-medium text-gray-700 mb-1"
-                    >
+                <div className="space-y-2">
+                    <Label className="text-[#1E1E2C] font-medium">
                         Password
-                    </label>
-                    <Field
-                        name="password"
-                        type="password"
-                        id="password"
-                        placeholder="••••••••"
-                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    />
-                    <ErrorMessage
-                        name="password"
-                        component="p"
-                        className="mt-1 text-xs text-red-500"
-                    />
+                    </Label>
+
+                    <div className="relative">
+                        <Input
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            onChange={formik.handleChange}
+                            onBlur={formik.handleBlur}
+                            value={formik.values.password}
+                            className="h-11 rounded-xl pr-10 focus-visible:ring-2 focus-visible:ring-[#F29F67]"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#1E1E2C]"
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+
+                    {formik.touched.password && formik.errors.password && (
+                        <p className="text-red-500 text-sm">
+                            {formik.errors.password}
+                        </p>
+                    )}
                 </div>
 
-                {/* Submit */}
-                <button
-                    type="submit"
-                    className="w-full rounded-lg bg-primary text-primary-foreground hover:opacity-90 py-2.5 text-sm font-medium transition disabled:opacity-50"
+                {/* Forgot Password */}
+                <div className="text-right text-sm">
+                    <button
+                        type="button"
+                        className="text-[#3B8FF3] hover:underline"
+                    >
+                        Forgot password?
+                    </button>
+                </div>
+
+                {/* Button */}
+                <Button
+                    disabled={formik.isSubmitting}
+                    className="w-full h-11 rounded-xl text-white font-medium transition-all duration-300 hover:opacity-90"
+                    style={{
+                        background: "linear-gradient(135deg, #F29F67, #E0B50F)",
+                    }}
                 >
-                    Sign in
-                </button>
-            </Form>
-        </Formik>
-    );
+                    {formik.isSubmitting ? "Logging in..." : "Login"}
+                </Button>
+
+                {/* Footer */}
+                <div className="text-center text-sm text-gray-500 pt-2">
+                    Don’t have an account?{" "}
+                    <button
+                        type="button"
+                        onClick={() => navigate("/register")}
+                        className="font-medium text-[#3B8FF3] hover:underline"
+                    >
+                        Register
+                    </button>
+                </div>
+
+            </form>
+        </AuthLayout>
+    )
 }

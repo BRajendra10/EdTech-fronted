@@ -1,85 +1,76 @@
 import api from "../axios";
 import { createSlice, createAsyncThunk, isPending, isRejected } from "@reduxjs/toolkit";
 
+// LOGIN
 export const login = createAsyncThunk(
     "user/login",
     async ({ email, password }, { rejectWithValue }) => {
         try {
-            const response = await api.post("/users/login", {
-                email,
-                password,
-            });
-            return response.data;
+            const response = await api.post("/users/login", { email, password });
+            return response.data.data; // safeUser
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Something went wrong");
-        }
-    }
-);
-
-export const signup = createAsyncThunk(
-    "user/signup",
-    async (formData, { rejectWithValue }) => {
-        try {
-            const response = await api.post("/users/signup", formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-
-            return response.data;
-        } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Something went wrong");
-        }
-    }
-);
-
-export const fetchAllUsers = createAsyncThunk(
-    "users/fetchAll",
-    async ({ page = 1, limit = 10, role, status, search }, { rejectWithValue }) => {
-        try {
-            const response = await api.get("/users/all", {
-                params: { page, limit, role, status, search }
-            });
-            return response.data.data;
-        } catch (error) {
             return rejectWithValue(
-                error.response?.data?.message || "Failed to fetch users"
+                err.response?.data?.message || "Login failed"
             );
         }
     }
 );
 
+// SIGNUP
+export const signup = createAsyncThunk(
+    "user/signup",
+    async (formData, { rejectWithValue }) => {
+        try {
+            const response = await api.post("/signup", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+
+            // signup only sends message, NOT user
+            return response.data.message;
+        } catch (err) {
+            return rejectWithValue(
+                err.response?.data?.message || "Signup failed"
+            );
+        }
+    }
+);
+
+// VERIFY OTP
 export const verifyOtp = createAsyncThunk(
     "user/verifyOtp",
-    async ({ verificationCode, userId }, { rejectWithValue }) => {
+    async ({ email, verificationCode }, { rejectWithValue }) => {
         try {
-            const response = await api.post("/users/verify-otp", {
+            const response = await api.post("/verify-otp", {
+                email,
                 verificationCode,
-                userId,
             });
 
-            return response.data;
+            return response.data.data; // returns user
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Something went wrong");
+            return rejectWithValue(
+                err.response?.data?.message || "Invalid OTP"
+            );
         }
     }
 );
 
+// RESEND OTP
 export const resendVerificationOtp = createAsyncThunk(
     "user/resendVerificationOtp",
-    async ({ userId }, { rejectWithValue }) => {
+    async ({ email }, { rejectWithValue }) => {
         try {
-            const response = await api.post("/users/resend-verification-otp", {
-                userId,
+            const response = await api.post("/resend-verification-otp", {
+                email,
             });
 
-            return response.data;
+            return response.data.message;
         } catch (err) {
-            return rejectWithValue(err.response?.data?.message || "Something went wrong");
+            return rejectWithValue(
+                err.response?.data?.message || "Failed to resend OTP"
+            );
         }
     }
 );
-
 
 export const changePassword = createAsyncThunk(
     "user/changePassword",
@@ -108,6 +99,22 @@ export const logoutUser = createAsyncThunk(
         } catch (err) {
             return rejectWithValue(
                 err.response?.data?.message || "Logout failed"
+            );
+        }
+    }
+);
+
+export const fetchAllUsers = createAsyncThunk(
+    "users/fetchAll",
+    async ({ page = 1, limit = 10, role, status, search }, { rejectWithValue }) => {
+        try {
+            const response = await api.get("/users/all", {
+                params: { page, limit, role, status, search }
+            });
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to fetch users"
             );
         }
     }
@@ -199,24 +206,25 @@ const userSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // login user
+            // LOGIN SUCCESS
             .addCase(login.fulfilled, (state, action) => {
-                state.currentUser = action.payload?.data ?? null;
+                state.currentUser = action.payload;
+                state.status = "fulfilled";
+                state.error = null;
+            })
+
+            // SIGNUP SUCCESS
+            .addCase(signup.fulfilled, (state) => {
                 state.status = "fulfilled";
             })
 
-            // SIGNUP
-            .addCase(signup.fulfilled, (state, action) => {
-                state.currentUser = action.payload?.data ?? null;
+            // VERIFY OTP SUCCESS
+            .addCase(verifyOtp.fulfilled, (state, action) => {
+                state.currentUser = action.payload;
                 state.status = "fulfilled";
             })
 
-            // VERIFY OTP
-            .addCase(verifyOtp.fulfilled, (state) => {
-                state.status = "fulfilled";
-            })
-
-            // RESEND VERIFY OTP
+            // RESEND OTP SUCCESS
             .addCase(resendVerificationOtp.fulfilled, (state) => {
                 state.status = "fulfilled";
             })

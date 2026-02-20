@@ -1,126 +1,95 @@
-import { Formik, Form, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import { useRef } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { resendVerificationOtp, verifyOtp } from "../../features/slice/userSlice";
-import { toast } from "sonner";
-
-const otpSchema = Yup.object({
-    otp: Yup.string()
-        .length(6, "OTP must be 6 digits")
-        .required("OTP is required"),
-});
+import { useEffect } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { toast } from "sonner"
+import { Formik, Form, Field, ErrorMessage } from "formik"
+import * as Yup from "yup"
+import api from "../../features/axios"
+import AuthLayout from "./AuthLayout"
 
 export default function VerifyOtp() {
-    const inputsRef = useRef([]);
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+    const navigate = useNavigate()
+    const location = useLocation()
+    const email = location.state?.email
 
-    const userId = localStorage.getItem("verifyUserId");
+    useEffect(() => {
+        if (!email){
+            navigate("/login");
+            toast.message("Email is required");
+        }
+    }, [email, navigate])
 
-    console.log(userId);
+    const validationSchema = Yup.object({
+        otp: Yup.string()
+            .length(6, "OTP must be 6 digits")
+            .required("OTP is required"),
+    })
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-100 to-stone-200">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-lg">
-                <div className="text-center">
-                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                        ✉️
-                    </div>
-                    <h1 className="text-lg font-semibold">Check your email</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        We sent a 6-digit verification code
-                    </p>
-                </div>
+        <AuthLayout
+            title="Verify your email"
+            subtitle={`Enter the 6-digit code sent to ${email}`}
+        >
+            <Formik
+                initialValues={{ otp: "" }}
+                validationSchema={validationSchema}
+                onSubmit={async (values, { setSubmitting }) => {
+                    try {
+                        await api.post("/verify-otp", {
+                            email,
+                            verificationCode: values.otp,
+                        })
 
-                <Formik
-                    initialValues={{ otp: "" }}
-                    validationSchema={otpSchema}
-                    onSubmit={async (values) => {
-                        console.log(values);
+                        toast.success("Email verified successfully")
+                        navigate("/login")
+                    } catch (error) {
+                        toast.error(
+                            error.response?.data?.message || "Invalid OTP"
+                        )
+                    } finally {
+                        setSubmitting(false)
+                    }
+                }}
+            >
+                {({ isSubmitting }) => (
+                    <Form className="space-y-6">
 
-                        const result = await dispatch(verifyOtp({ userId: userId, verificationCode: values.otp }))
-
-                        if (verifyOtp.fulfilled.match(result)) {
-                            toast.success(result.payload.message);
-                            navigate("/");
-                        }
-                    }}
-                >
-                    {({ setFieldValue, values }) => (
-                        <Form className="mt-6">
-                            {/* OTP Boxes */}
-                            <div className="flex justify-center gap-2">
-                                {Array.from({ length: 6 }).map((_, index) => (
-                                    <input
-                                        key={index}
-                                        type="text"
-                                        maxLength={1}
-                                        value={values.otp[index] || ""}
-                                        ref={(el) => {
-                                            if (el) inputsRef.current[index] = el;
-                                        }}
-                                        onChange={(e) => {
-                                            const val = e.target.value.replace(/[^0-9]/g, "");
-                                            const otpArr = values.otp.split("");
-                                            otpArr[index] = val;
-                                            setFieldValue("otp", otpArr.join(""));
-
-                                            if (val && inputsRef.current[index + 1]) {
-                                                inputsRef.current[index + 1].focus();
-                                            }
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (
-                                                e.key === "Backspace" &&
-                                                !values.otp[index] &&
-                                                inputsRef.current[index - 1]
-                                            ) {
-                                                inputsRef.current[index - 1].focus();
-                                            }
-                                        }}
-                                        className="h-12 w-12 rounded-lg border text-center text-lg font-medium focus:border-purple-500 focus:ring-2 focus:ring-purple-500"
-                                    />
-                                ))}
-                            </div>
-
-                            <ErrorMessage
+                        <div className="space-y-2 text-center">
+                            <Label>OTP Code</Label>
+                            <Field
+                                as={Input}
                                 name="otp"
-                                component="p"
-                                className="mt-2 text-center text-xs text-red-500"
+                                maxLength={6}
+                                className="h-12 text-center text-xl tracking-widest rounded-xl focus-visible:ring-2 focus-visible:ring-[#F29F67]"
                             />
+                            <ErrorMessage name="otp" component="p" className="text-red-500 text-sm" />
+                        </div>
 
-                            {/* Submit */}
+                        <Button
+                            disabled={isSubmitting}
+                            className="w-full h-11 rounded-xl text-white"
+                            style={{
+                                background: "linear-gradient(135deg, #F29F67, #E0B50F)",
+                            }}
+                        >
+                            {isSubmitting ? "Verifying..." : "Verify"}
+                        </Button>
+
+                        <div className="text-center text-sm text-gray-500">
+                            Didn’t receive the code?{" "}
                             <button
-                                type="submit"
-                                className="mt-6 w-full rounded-lg bg-purple-600 py-2.5 text-sm font-medium text-white hover:bg-purple-700 transition"
+                                type="button"
+                                className="text-[#3B8FF3] font-medium hover:underline"
                             >
-                                Verify Email
+                                Resend OTP
                             </button>
-                        </Form>
-                    )}
-                </Formik>
+                        </div>
 
-                {/* Resend */}
-                <div className="mt-4 text-center text-sm">
-                    Didn’t receive the code?{" "}
-                    <button
-                        className="font-medium text-purple-600 hover:underline"
-                        onClick={async () => {
-                            const result = await dispatch(
-                                resendVerificationOtp({ userId })
-                            );
-
-                            if (resendVerificationOtp.fulfilled.match(result)) {
-                                console.log("OTP resent");
-                            }
-                        }}
-                    >
-                        Resend
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
+                    </Form>
+                )}
+            </Formik>
+        </AuthLayout>
+    )
 }
