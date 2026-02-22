@@ -35,6 +35,14 @@ export default function Sidebar() {
         item.roles.includes(currentUser?.role)
     )
 
+    const getNavLinkClass = ({ isActive }) => {
+        return `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-all duration-200
+        ${isActive
+            ? "bg-primary text-primary-foreground shadow-sm font-medium"
+            : "text-muted-foreground hover:text-foreground hover:bg-accent"
+        }`;
+    };
+
     return (
         <Aside className="w-64 bg-background text-foreground border-r-2 flex flex-col">
             {/* Logo */}
@@ -58,17 +66,11 @@ export default function Sidebar() {
                     </p>
 
                     <SidebarMenu>
-                        {filteredMenu.map(({ label, icon: Icon, to }, index) => (
-                            <SidebarMenuItem key={index}>
+                        {filteredMenu.map(({ label, icon: Icon, to }) => (
+                            <SidebarMenuItem key={to}>
                                 <NavLink
                                     to={to}
-                                    className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-sm text-sm transition-all duration-200 hover:text-foreground hover:bg-primary/60
-                                        ${isActive
-                                            ? "bg-primary text-primary-foreground shadow-sm"
-                                            : "text-muted-foreground"
-                                        }`
-                                    }
+                                    className={getNavLinkClass}
                                 >
                                     <Icon size={18} />
                                     {label}
@@ -83,19 +85,17 @@ export default function Sidebar() {
                         Settings
                     </p>
 
-                    <NavLink
-                        to="/settings"
-                        className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:text-foreground hover:bg-primary/60
-                            ${isActive
-                                ? "bg-primary text-primary-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground hover:bg-accent/20"
-                            }`
-                        }
-                    >
-                        <Settings size={18} />
-                        Settings
-                    </NavLink>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <NavLink
+                                to="/settings"
+                                className={getNavLinkClass}
+                            >
+                                <Settings size={18} />
+                                Settings
+                            </NavLink>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
                 </div>
             </SidebarContent>
 

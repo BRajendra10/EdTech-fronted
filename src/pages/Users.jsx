@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Search } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import {
     Card,
@@ -39,8 +39,7 @@ function UsersPage() {
     const debounceRef = useRef(null);
     const limit = 10;
 
-    const { currentUser, users, pagination, searchTerm, roleFilter, statusFilter } = useSelector((state) => state.users);
-    console.log(currentUser);
+    const { currentUser, users, pagination, status, searchTerm, roleFilter, statusFilter } = useSelector((state) => state.users);
 
     useEffect(() => {
         dispatch(
@@ -77,18 +76,20 @@ function UsersPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Users</CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                    {/* Filters (UI only) */}
-                    <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                        <Input placeholder="Search users..." className="sm:max-w-xs" onChange={(e) => handleSearch(e.target.value)} />
-
-                        <Select onValueChange={(value) => handleRoleChange(value)}>
-                            <SelectTrigger className="sm:max-w-xs">
+            <Card className="border-none shadow-none bg-transparent">
+                <CardContent className="p-0 space-y-6">
+                    {/* Filters */}
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-1 sm:max-w-sm">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search by name or email..."
+                                className="pl-9 bg-background"
+                                onChange={(e) => handleSearch(e.target.value)}
+                            />
+                        </div>
+                        <Select onValueChange={handleRoleChange}>
+                            <SelectTrigger className="w-full sm:w-[180px] bg-background">
                                 <SelectValue placeholder="Role" />
                             </SelectTrigger>
                             <SelectContent>
@@ -98,9 +99,8 @@ function UsersPage() {
                                 <SelectItem value="STUDENT">Student</SelectItem>
                             </SelectContent>
                         </Select>
-
-                        <Select onValueChange={(value) => handleStatusChange(value)}>
-                            <SelectTrigger className="sm:max-w-xs">
+                        <Select onValueChange={handleStatusChange}>
+                            <SelectTrigger className="w-full sm:w-[180px] bg-background">
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -112,6 +112,24 @@ function UsersPage() {
                         </Select>
                     </div>
 
+                    {/* Loading State */}
+                    {status === "loading" && (
+                        <div className="h-60 flex items-center justify-center text-muted-foreground">
+                            Loading users...
+                        </div>
+                    )}
+
+                    {/* Empty State */}
+                    {status !== "loading" && (!users || users.length === 0) && (
+                        <div className="h-60 flex flex-col items-center justify-center text-muted-foreground border rounded-lg border-dashed">
+                            <Users className="h-10 w-10 mb-3 opacity-50" />
+                            <h3 className="font-semibold">No Users Found</h3>
+                            <p className="text-sm">Try adjusting your search or filter criteria.</p>
+                        </div>
+                    )}
+
+                    {status !== "loading" && users && users.length > 0 && (
+                        <>
                     {/* Table (Dashboard) */}
                     <div className="hidden lg:block rounded-md border">
                         <Table>
@@ -238,7 +256,7 @@ function UsersPage() {
 
                                     {/* Role & Status */}
                                     <div className="flex gap-2">
-                                        <Badge
+                                        <Badge // Role
                                             variant="outline"
                                             className={`${roleStyle[user.role]} text-xs`}
                                         >
@@ -246,19 +264,20 @@ function UsersPage() {
                                         </Badge>
 
                                         <Select
-                                            value={user.status}
-                                            onValueChange={(value) =>
-                                                dispatch(updateUserStatus({ userId: user._id, status: value }))
-                                            }
+                                            value={user.status} // Status
+                                            onValueChange={(value) => dispatch(updateUserStatus({ userId: user._id, status: value }))}
+                                            disabled={currentUser?.role === "STUDENT"}
                                         >
-                                            <SelectTrigger className="w-28 h-8 text-xs">
+                                            <SelectTrigger className="w-32 h-8 text-xs">
                                                 <SelectValue />
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="ACTIVE">ACTIVE</SelectItem>
-                                                <SelectItem value="PENDING">PENDING</SelectItem>
-                                                <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
-                                            </SelectContent>
+                                            {currentUser?.role !== "STUDENT" && (
+                                                <SelectContent>
+                                                    <SelectItem value="ACTIVE">Active</SelectItem>
+                                                    <SelectItem value="PENDING">Pending</SelectItem>
+                                                    <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                                                </SelectContent>
+                                            )}
                                         </Select>
                                     </div>
 
@@ -309,7 +328,8 @@ function UsersPage() {
                             <ChevronRight className="h-4 w-4" />
                         </Button>
                     </div>
-
+                    </>
+                    )}
                 </CardContent>
             </Card>
         </div>

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, MoreVertical, Eye, Pencil } from "lucide-react";
 import CreateCourseModal from "../components/AddCourses";
 import EditCourse from "../components/EditCourse";
@@ -76,12 +77,9 @@ function CoursesPage() {
                     <CardTitle>Courses</CardTitle>
 
                     {currentUser?.role !== "STUDENT" && (
-                        <button
-                            onClick={() => setIsOpen(true)}
-                            className="bg-primary text-primary-foreground px-4 py-2 rounded-md text-sm hover:opacity-90 transition"
-                        >
+                        <Button onClick={() => setIsOpen(true)}>
                             + Add Course
-                        </button>
+                        </Button>
                     )}
                 </CardHeader>
 
@@ -113,17 +111,12 @@ function CoursesPage() {
                     </div>
 
                     {/* Loading */}
-                    {status === "pending" && (
-                        <p className="text-muted-foreground text-sm">
-                            Loading courses...
-                        </p>
-                    )}
-
-                    {/* Empty State */}
-                    {status === "fulfilled" && courses.length === 0 && (
-                        <p className="text-muted-foreground text-sm">
-                            No courses found.
-                        </p>
+                    {(status === "pending" || (status === "fulfilled" && courses.length === 0)) && (
+                        <div className="flex items-center justify-center h-60">
+                            <p className="text-muted-foreground">
+                                {status === "pending" ? "Loading courses..." : "No courses found."}
+                            </p>
+                        </div>
                     )}
 
                     {/* Courses Grid */}
@@ -134,7 +127,7 @@ function CoursesPage() {
                                 {courses.map((course) => (
                                     <Card
                                         key={course._id}
-                                        className="group overflow-hidden border border-border/60 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 p-0 gap-0"
+                                        className="group overflow-hidden border hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-0 gap-0"
                                     >
 
                                         {/* Thumbnail */}
@@ -250,27 +243,27 @@ function CoursesPage() {
 
                             {/* Pagination */}
                             <div className="flex items-center justify-end gap-3 mt-4">
-                                <button
+                                <Button
                                     variant="outline"
                                     size="icon"
                                     disabled={!pagination?.hasPrevPage}
                                     onClick={() => dispatch(setPage(filters.page - 1))}
                                 >
                                     <ChevronLeft className="h-4 w-4" />
-                                </button>
+                                </Button>
 
                                 <span className="text-sm">
                                     Page {pagination?.page} of {pagination?.totalPages}
                                 </span>
 
-                                <button
+                                <Button
                                     variant="outline"
                                     size="icon"
                                     disabled={!pagination?.hasNextPage}
                                     onClick={() => dispatch(setPage(filters.page + 1))}
                                 >
                                     <ChevronRight className="h-4 w-4" />
-                                </button>
+                                </Button>
                             </div>
 
                         </>

@@ -245,7 +245,7 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, icon: Icon }) {
     return (
-        <Card className="border border-primary/40 shadow-sm hover:shadow-md transition">
+        <Card className="border shadow-sm hover:shadow-md transition">
             <CardContent className="flex justify-between items-center">
                 <div>
                     <p className="text-sm text-muted-foreground">{title}</p>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { ChevronDown, ChevronRight } from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useParams } from "react-router-dom"
 import { fetchCourseById } from "../features/slice/courseSlice"
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "sonner"
 import AddLessonDrawer from "../components/AddLessons"
@@ -37,15 +38,6 @@ const CourseDetail = () => {
     useEffect(() => {
         if (courseId) dispatch(fetchCourseById(courseId))
     }, [courseId, dispatch])
-
-    const [openModules, setOpenModules] = useState({})
-
-    const toggleModule = (id) => {
-        setOpenModules((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }))
-    }
 
 
     const formatDuration = (seconds = 0) => {
@@ -164,21 +156,22 @@ const CourseDetail = () => {
                             {/* Actions */}
                             <div className="space-y-3">
 
-                                <button
+                                <Button
                                     onClick={handleEnroll}
                                     disabled={selectedCourse.status !== "PUBLISHED"}
-                                    className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium transition hover:opacity-90"
+                                    className="w-full"
                                 >
                                     Enroll Now
-                                </button>
+                                </Button>
 
                                 {currentUser.role !== "STUDENT" && (
-                                    <button
+                                    <Button
                                         onClick={() => setIsModuleOpen(true)}
-                                        className="w-full py-2.5 rounded-lg border text-sm font-medium hover:bg-muted transition"
+                                        variant="outline"
+                                        className="w-full"
                                     >
                                         + Add Module
-                                    </button>
+                                    </Button>
                                 )}
 
                             </div>
@@ -205,74 +198,57 @@ const CourseDetail = () => {
                                 <p>No modules added yet.</p>
                             </div>
                         ) : (
-                            selectedCourse.modules.map((module) => {
-                                const sortedLessons = [...(module.lessons || [])].sort(
-                                    (a, b) => a.order - b.order
-                                )
+                            <Accordion type="multiple" className="w-full">
+                                {selectedCourse.modules.map((module) => {
+                                    const sortedLessons = [...(module.lessons || [])].sort(
+                                        (a, b) => a.order - b.order
+                                    )
 
-                                return (
-                                    <div key={module._id} className="border-t">
+                                    return (
+                                        <AccordionItem value={module._id} key={module._id} className="border-t data-[state=open]:bg-muted/20">
+                                            <AccordionTrigger className="px-4 py-3 font-medium hover:bg-muted/50 transition hover:no-underline data-[state=open]:bg-muted/60">
+                                                <div className="grid grid-cols-12 w-full text-left items-center gap-x-4">
+                                                    <div className="col-span-1">{module.order}</div>
+                                                    <div className="col-span-5">{module.title}</div>
+                                                    <div className="col-span-2 text-sm text-muted-foreground">{sortedLessons.length} Lessons</div>
+                                                    <div className="col-span-2 text-sm text-muted-foreground">
+                                                        {formatDuration(
+                                                            sortedLessons.reduce((acc, l) => acc + (l.duration || 0), 0)
+                                                        )}
+                                                    </div>
+                                                    <div className="col-span-2 flex justify-end items-center gap-3">
+                                                        {currentUser.role !== "STUDENT" && (
+                                                            <>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        setEditingModule(module)
+                                                                    }}
+                                                                    className="text-xs px-2 py-1 h-auto"
+                                                                >
+                                                                    Edit
+                                                                </Button>
 
-                                        {/* Module Header */}
-                                        <div
-                                            onClick={() => toggleModule(module._id)}
-                                            className="grid grid-cols-12 px-4 py-3 font-medium bg-muted/30 cursor-pointer hover:bg-muted/50 transition items-center"
-                                        >
-                                            <div className="col-span-1">
-                                                {module.order}
-                                            </div>
-
-                                            <div className="col-span-5">
-                                                {module.title}
-                                            </div>
-
-                                            <div className="col-span-2 text-sm text-muted-foreground">
-                                                {sortedLessons.length} Lessons
-                                            </div>
-
-                                            <div className="col-span-2 text-sm text-muted-foreground">
-                                                {formatDuration(
-                                                    sortedLessons.reduce((acc, l) => acc + (l.duration || 0), 0)
-                                                )}
-                                            </div>
-
-                                            <div className="col-span-2 flex justify-end items-center gap-3">
-                                                {currentUser.role !== "STUDENT" && (
-                                                    <>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setEditingModule(module)
-                                                            }}
-                                                            className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
-                                                        >
-                                                            Edit
-                                                        </button>
-
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation()
-                                                                setSelectedModuleId(module._id)
-                                                                setIsLessonOpen(true)
-                                                            }}
-                                                            className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
-                                                        >
-                                                            + Add Lesson
-                                                        </button>
-                                                    </>
-                                                )}
-
-                                                <ChevronDown
-                                                    className={`h-4 w-4 transition-transform ${openModules[module._id] ? "rotate-180" : ""
-                                                        }`}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Expanded Content */}
-                                        {openModules[module._id] && (
-                                            <div className="bg-background">
-
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        setSelectedModuleId(module._id)
+                                                                        setIsLessonOpen(true)
+                                                                    }}
+                                                                    className="text-xs px-2 py-1 h-auto"
+                                                                >
+                                                                    + Add Lesson
+                                                                </Button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="bg-background">
                                                 {sortedLessons.length === 0 ? (
                                                     <div className="px-8 py-4 text-xs text-muted-foreground">
                                                         No lessons yet. Click “Add Lesson” to get started.
@@ -285,7 +261,7 @@ const CourseDetail = () => {
                                                         >
                                                             <div className="col-span-1">
                                                                 {module.order}.{lesson.order}
-                                                            </div>
+                                            </div>
 
                                                             <div className="col-span-6">
                                                                 {lesson.title}
@@ -301,23 +277,25 @@ const CourseDetail = () => {
                                                                 </span>
 
                                                                 {currentUser.role !== "STUDENT" && (
-                                                                    <button
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
                                                                         onClick={() => setEditingLesson(lesson)}
-                                                                        className="text-xs px-2 py-1 border rounded-md hover:bg-muted transition"
+                                                                        className="text-xs px-2 py-1 h-auto"
                                                                     >
                                                                         Edit
-                                                                    </button>
+                                                                    </Button>
                                                                 )}
                                                             </div>
 
                                                         </div>
                                                     ))
                                                 )}
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                            })
+                                            </AccordionContent>
+                                        </AccordionItem>
+                                    )
+                                })}
+                            </Accordion>
                         )}
                     </div>
                 </div>

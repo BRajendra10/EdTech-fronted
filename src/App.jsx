@@ -15,6 +15,7 @@ import CoursesPage from "./pages/Courses.jsx";
 import UsersPage from "./pages/Users.jsx";
 import CourseDetail from "./pages/CourseDetail.jsx";
 import CreateCoursePage from "./components/AddCourses.jsx";
+import EnrollmentsPage from "./pages/Enrollments.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -36,7 +37,7 @@ function App() {
             <Route path="users" element={<UsersPage />} />
             <Route path="courses" element={<CoursesPage />} />
             <Route path="course/:courseId" element={<CourseDetail />} />
-            <Route path="enrollment" element={<div className="bg-stone-50 text-stone-900">Welcome to enrollments page.</div>} />
+            <Route path="enrollment" element={<EnrollmentsPage />} />
           </Route>
 
 

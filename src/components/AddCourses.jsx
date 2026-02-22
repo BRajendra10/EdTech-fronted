@@ -3,6 +3,22 @@ import { useDispatch } from "react-redux"
 import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import { createCourse, fetchCourses } from "../features/slice/courseSlice"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+
 
 const CreateCourseModal = ({ isOpen, onClose }) => {
     const dispatch = useDispatch()
@@ -73,160 +89,107 @@ const CreateCourseModal = ({ isOpen, onClose }) => {
     }
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-            onClick={onClose}
-        >
-            <div
-                className="bg-white w-full max-w-2xl rounded-xl shadow-xl p-8 relative"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex justify-between items-start mb-6">
-                    <div>
-                        <h2 className="text-xl font-semibold">
-                            Create New Course
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            Fill in course details below
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={onClose}
-                        className="text-sm hover:opacity-60"
-                    >
-                        ✕
-                    </button>
-                </div>
-
-                <Formik
-                    initialValues={initialValues}
-                    validationSchema={validationSchema}
-                    onSubmit={handleSubmit}
-                >
-                    {({ isSubmitting, setFieldValue, values }) => (
-                        <Form className="space-y-5">
-
-                            {/* Title */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    Course Title
-                                </label>
-                                <Field
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Create New Course</DialogTitle>
+                    <DialogDescription>Fill in course details below to create a new course.</DialogDescription>
+                </DialogHeader>
+                <Formik initialValues={initialValues} validationSchema={validationSchema} onSubmit={handleSubmit}>
+                    {({ isSubmitting, setFieldValue, values, handleChange, handleBlur, touched, errors }) => (
+                        <Form className="grid gap-6 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="title">Course Title</Label>
+                                <Input
+                                    id="title"
                                     name="title"
-                                    type="text"
-                                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                                    placeholder="Enter course title"
+                                    value={values.title}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    placeholder="e.g. Introduction to React"
                                 />
-                                <ErrorMessage
-                                    name="title"
-                                    component="p"
-                                    className="text-sm text-red-500"
-                                />
+                                {touched.title && errors.title && <p className="text-sm text-red-500">{errors.title}</p>}
                             </div>
 
-                            {/* Description */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    Description
-                                </label>
-                                <Field
+                            <div className="grid gap-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
                                     name="description"
-                                    as="textarea"
-                                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                                    placeholder="Enter course description"
+                                    value={values.description}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    placeholder="A brief summary of the course"
                                 />
-                                <ErrorMessage
-                                    name="description"
-                                    component="p"
-                                    className="text-sm text-red-500"
-                                />
+                                {touched.description && errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
                             </div>
 
-                            {/* Price */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    Price
-                                </label>
-                                <Field
-                                    name="price"
-                                    type="number"
-                                    disabled={values.isFree}
-                                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                                />
-                                <ErrorMessage
-                                    name="price"
-                                    component="p"
-                                    className="text-sm text-red-500"
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="price">Price</Label>
+                                    <Input
+                                        id="price"
+                                        name="price"
+                                        type="number"
+                                        value={values.price}
+                                        onChange={handleChange}
+                                        onBlur={handleBlur}
+                                        disabled={values.isFree}
+                                        placeholder="e.g. 499"
+                                    />
+                                    {touched.price && errors.price && <p className="text-sm text-red-500">{errors.price}</p>}
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="status">Status</Label>
+                                    <Select name="status" value={values.status} onValueChange={(value) => setFieldValue("status", value)}>
+                                        <SelectTrigger id="status">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="DRAFT">Draft</SelectItem>
+                                            <SelectItem value="PUBLISHED">Published</SelectItem>
+                                            <SelectItem value="UNPUBLISHED">Unpublished</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
-                            {/* Free Checkbox */}
-                            <div className="flex items-center gap-2">
-                                <Field
-                                    type="checkbox"
+                            <div className="flex items-center space-x-2">
+                                <Checkbox
+                                    id="isFree"
                                     name="isFree"
+                                    checked={values.isFree}
+                                    onCheckedChange={(checked) => setFieldValue("isFree", checked)}
                                 />
-                                <span className="text-sm">
+                                <Label htmlFor="isFree" className="text-sm font-normal">
                                     This is a free course
-                                </span>
+                                </Label>
                             </div>
 
-                            {/* Status */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    Status
-                                </label>
-                                <Field
-                                    as="select"
-                                    name="status"
-                                    className="w-full border rounded-lg px-3 py-2 text-sm"
-                                >
-                                    <option value="DRAFT">Draft</option>
-                                    <option value="PUBLISHED">Published</option>
-                                    <option value="UNPUBLISHED">Unpublished</option>
-                                </Field>
-                            </div>
-
-                            {/* Thumbnail */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">
-                                    Thumbnail
-                                </label>
-                                <input
+                            <div className="grid gap-2">
+                                <Label htmlFor="thumbnail">Thumbnail</Label>
+                                <Input
+                                    id="thumbnail"
+                                    name="thumbnail"
                                     type="file"
                                     accept="image/*"
-                                    onChange={(event) =>
-                                        setFieldValue(
-                                            "thumbnail",
-                                            event.currentTarget.files[0]
-                                        )
-                                    }
-                                    className="w-full border rounded-lg px-3 py-2 text-sm"
+                                    onChange={(event) => setFieldValue("thumbnail", event.currentTarget.files[0])}
                                 />
-                                <ErrorMessage
-                                    name="thumbnail"
-                                    component="p"
-                                    className="text-sm text-red-500"
-                                />
+                                {touched.thumbnail && errors.thumbnail && <p className="text-sm text-red-500">{errors.thumbnail}</p>}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="w-full py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
-                            >
-                                {isSubmitting
-                                    ? "Creating..."
-                                    : "Create Course"}
-                            </button>
-
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+                                <Button type="submit" disabled={isSubmitting}>
+                                    {isSubmitting ? "Creating..." : "Create Course"}
+                                </Button>
+                            </DialogFooter>
                         </Form>
                     )}
                 </Formik>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     )
 }
 
