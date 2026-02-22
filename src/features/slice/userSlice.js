@@ -208,6 +208,8 @@ const userSlice = createSlice({
         builder
             // LOGIN SUCCESS
             .addCase(login.fulfilled, (state, action) => {
+                localStorage.setItem("currentUser", JSON.stringify(action.payload));
+                
                 state.currentUser = action.payload;
                 state.status = "fulfilled";
                 state.error = null;

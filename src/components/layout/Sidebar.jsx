@@ -36,22 +36,24 @@ export default function Sidebar() {
     )
 
     return (
-        <Aside className="w-64 bg-slate-50 text-slate-900 flex flex-col">
+        <Aside className="w-64 bg-background text-foreground border-r-2 flex flex-col">
             {/* Logo */}
-            <SidebarHeader className="flex flex-row justify-start gap-3 p-4 border-b">
-                <div className="h-10 w-10 rounded-lg bg-blue-600 text-slate-100 flex items-center justify-center font-bold">
-                    <GraduationCap />
+            <SidebarHeader className="flex flex-row justify-start gap-3 p-4">
+                <div className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-semibold">
+                    <GraduationCap size={20} />
                 </div>
                 <div>
                     <h1 className="font-semibold leading-tight">LMS Admin</h1>
-                    <p className="text-xs text-slate-400">Learning Platform</p>
+                    <p className="text-xs text-muted-foreground">
+                        Learning Platform
+                    </p>
                 </div>
             </SidebarHeader>
 
             {/* Menu */}
             <SidebarContent className="flex-1 flex flex-col justify-between px-3 py-4 space-y-1">
                 <div>
-                    <p className="px-3 text-xs uppercase text-slate-400 mb-2">
+                    <p className="px-3 text-xs uppercase text-muted-foreground mb-2">
                         Main Menu
                     </p>
 
@@ -61,17 +63,15 @@ export default function Sidebar() {
                                 <NavLink
                                     to={to}
                                     className={({ isActive }) =>
-                                        `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition
+                                        `flex items-center gap-3 px-3 py-2 rounded-sm text-sm transition-all duration-200 hover:text-foreground hover:bg-primary/60
                                         ${isActive
-                                            ? "bg-blue-700 text-slate-100"
-                                            : "text-slate-700 hover:text-slate-100 hover:bg-blue-700/70"
+                                            ? "bg-primary text-primary-foreground shadow-sm"
+                                            : "text-muted-foreground"
                                         }`
                                     }
                                 >
-                                    {/* <SidebarMenuButton> */}
                                     <Icon size={18} />
                                     {label}
-                                    {/* </SidebarMenuButton> */}
                                 </NavLink>
                             </SidebarMenuItem>
                         ))}
@@ -79,17 +79,17 @@ export default function Sidebar() {
                 </div>
 
                 <div>
-                    <p className="px-3 text-xs uppercase text-slate-400 mb-2">
+                    <p className="px-3 text-xs uppercase text-muted-foreground mb-2">
                         Settings
                     </p>
 
                     <NavLink
                         to="/settings"
                         className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition
-              ${isActive
-                                ? "bg-blue-700 text-slate-100"
-                                : "text-slate-700 hover:text-slate-100 hover:bg-blue-700/70"
+                            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:text-foreground hover:bg-primary/60
+                            ${isActive
+                                ? "bg-primary text-primary-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground hover:bg-accent/20"
                             }`
                         }
                     >
@@ -100,7 +100,7 @@ export default function Sidebar() {
             </SidebarContent>
 
             {/* Bottom */}
-            <SidebarFooter className="border-t  p-2 space-y-3">
+            <SidebarFooter className="p-2 space-y-3">
                 <NavUser user={currentUser} />
             </SidebarFooter>
         </Aside>

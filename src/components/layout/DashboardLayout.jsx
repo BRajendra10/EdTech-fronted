@@ -5,10 +5,10 @@ import Topbar from "./Topbar";
 
 export default function DashboardLayout() {
     return (
-        <SidebarProvider className="w-full h-screen bg-slate-100">
+        <SidebarProvider className="w-full h-screen bg-background text-foreground">
             <Sidebar />
 
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col border-0">
                 {/* Topbar */}
                 <Topbar />
 

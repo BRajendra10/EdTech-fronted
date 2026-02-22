@@ -24,7 +24,7 @@ function App() {
   }, [dispatch])
 
   return (
-    <div className="w-full h-screen bg-stone-50 text-stone-900">
+    <div className="w-full h-screen bg-background text-foreground">
       <BrowserRouter>
         {/* for toast message */}
         <Toaster />
