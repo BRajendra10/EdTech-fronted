@@ -137,6 +137,64 @@ export const updateUserStatus = createAsyncThunk(
     }
 );
 
+export const forgotPassword = createAsyncThunk(
+    "auth/forgotPassword",
+    async (email, { rejectWithValue }) => {
+        try {
+            const response = await api.post(
+                "/users/forgot-password",
+                { email }
+            );
+
+            console.log(response.data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Something went wrong"
+            );
+        }
+    }
+);
+
+export const verifyResetOtp = createAsyncThunk(
+    "auth/verifyResetOtp",
+    async ({ email, otp }, { rejectWithValue }) => {
+        try {
+            const response = await api.post(
+                "/users/verify-reset-otp",
+                { email, otp }
+            );
+
+            console.log(response.data);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Invalid OTP"
+            );
+        }
+    }
+);
+
+// =============================
+// Reset Password
+// =============================
+export const resetPassword = createAsyncThunk(
+    "auth/resetPassword",
+    async ({ email, newPassword }, { rejectWithValue }) => {
+        try {
+            const response = await api.post(
+                "/users/reset-password",
+                { email, newPassword }
+            );
+
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || "Reset failed"
+            );
+        }
+    }
+);
 
 // SELECTOR
 export const selectFilteredUsers = (state) => {
@@ -166,6 +224,10 @@ const initialState = {
     roleFilter: "ALL",
     statusFilter: "ALL",
 
+    otpSent: false,
+    otpVerified: false,
+    passwordResetSuccess: false,
+
     status: "idle",
     error: null
 }
@@ -191,6 +253,13 @@ const userSlice = createSlice({
             }
         },
 
+        resetPasswordFlow: (state) => {
+            state.otpSent = false;
+            state.otpVerified = false;
+            state.passwordResetSuccess = false;
+            state.error = null;
+        },
+
         setSearchTerm: (state, action) => {
             state.searchTerm = action.payload;
         },
@@ -209,7 +278,7 @@ const userSlice = createSlice({
             // LOGIN SUCCESS
             .addCase(login.fulfilled, (state, action) => {
                 localStorage.setItem("currentUser", JSON.stringify(action.payload));
-                
+
                 state.currentUser = action.payload;
                 state.status = "fulfilled";
                 state.error = null;
@@ -268,14 +337,29 @@ const userSlice = createSlice({
                 }
             })
 
+            .addCase(forgotPassword.fulfilled, (state) => {
+                state.status = "fulfilled";
+                state.otpSent = true;
+            })
+
+            .addCase(verifyResetOtp.fulfilled, (state) => {
+                state.status = "fulfilled";
+                state.otpVerified = true;
+            })
+
+            .addCase(resetPassword.fulfilled, (state) => {
+                state.status = "fulfilled";
+                state.passwordResetSuccess = true;
+            })
+
             // Handle ALL pending states
-            .addMatcher(isPending(login, signup, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus), (state) => {
+            .addMatcher(isPending(login, signup, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus, forgotPassword, verifyResetOtp, resetPassword), (state) => {
                 state.status = "pending";
                 state.error = null;
             })
 
             // Handle ALL rejected states
-            .addMatcher(isRejected(login, signup, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus), (state, action) => {
+            .addMatcher(isRejected(login, signup, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus, forgotPassword, verifyResetOtp, resetPassword), (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload;
             })

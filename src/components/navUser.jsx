@@ -42,7 +42,7 @@ export function NavUser({ user }) {
 
         if (logoutUser.fulfilled.match(result)) {
             toast.success(result.payload.message);
-            navigate("/auth/login");
+            navigate("/login");
         }
     }
 

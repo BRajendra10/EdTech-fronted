@@ -55,7 +55,7 @@ export default function Settings() {
 
         if (changePassword.fulfilled.match(result)) {
             toast.success(result.payload.message);
-            navigate("/auth/login");
+            navigate("/login");
         }
     }
 

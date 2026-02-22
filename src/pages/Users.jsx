@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Users, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Search, Mail, Calendar, CheckCircle, XCircle } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import {
     Card,
@@ -215,92 +215,93 @@ function UsersPage() {
                         </Table>
                     </div>
 
-                    {/* Card (Mobile view) */}
-                    <div className="space-y-3 lg:hidden">
+                    {/* Card (Mobile/Grid view) */}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
                         {users?.map((user) => (
                             <Card
                                 key={user._id}
-                                className="border border-border/60 shadow-sm active:scale-[0.98] transition-transform"
+                                className="flex flex-col overflow-hidden hover:shadow-md transition-all duration-300 border-border/60 group"
                             >
-                                <CardContent className="p-4 space-y-4">
+                                {/* Header Pattern */}
+                                <div className={`h-20 w-full relative ${
+                                    user.role === 'ADMIN' ? 'bg-red-500/10' : 
+                                    user.role === 'INSTRUCTOR' ? 'bg-blue-500/10' : 'bg-green-500/10'
+                                }`}>
+                                    <div className="absolute top-2 right-2">
+                                        <Badge 
+                                            variant={user.status === "ACTIVE" ? "default" : "secondary"} 
+                                            className={`shadow-sm ${user.status === "ACTIVE" ? "bg-green-600 hover:bg-green-700" : ""}`}
+                                        >
+                                            {user.status}
+                                        </Badge>
+                                    </div>
+                                </div>
 
-                                    {/* Header */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <img
-                                                src={user.avatar}
-                                                alt={user.fullName}
-                                                className="h-11 w-11 rounded-full object-cover"
-                                            />
-
-                                            <div className="min-w-0">
-                                                <p className="font-medium leading-tight truncate">
-                                                    {user.fullName}
-                                                </p>
-                                                <p className="text-xs text-muted-foreground truncate">
-                                                    {user.email}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Status dot */}
-                                        <span
-                                            className={`h-2.5 w-2.5 rounded-full ${user.status === "ACTIVE"
-                                                ? "bg-green-500"
-                                                : user.status === "PENDING"
-                                                    ? "bg-yellow-500"
-                                                    : "bg-red-500"
-                                                }`}
+                                <CardContent className="p-5 pt-0 flex flex-col flex-1 gap-3">
+                                    {/* Avatar */}
+                                    <div className="-mt-10 mb-1">
+                                        <img
+                                            src={user.avatar}
+                                            alt={user.fullName}
+                                            className="h-20 w-20 rounded-full object-cover border-4 border-background shadow-sm"
                                         />
                                     </div>
 
-                                    {/* Role & Status */}
-                                    <div className="flex gap-2">
-                                        <Badge // Role
-                                            variant="outline"
-                                            className={`${roleStyle[user.role]} text-xs`}
-                                        >
+                                    {/* User Info */}
+                                    <div className="space-y-1">
+                                        <h3 className="font-semibold text-lg leading-tight truncate">
+                                            {user.fullName}
+                                        </h3>
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <Mail className="h-3.5 w-3.5" />
+                                            <span className="truncate">{user.email}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Badges */}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <Badge variant="outline" className={roleStyle[user.role]}>
                                             {user.role}
                                         </Badge>
+                                        
+                                        {user.isEmailVerified ? (
+                                            <Badge variant="secondary" className="text-xs text-green-600 bg-green-50 border-green-200 flex items-center gap-1">
+                                                <CheckCircle className="h-3 w-3" /> Verified
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary" className="text-xs text-amber-600 bg-amber-50 border-amber-200 flex items-center gap-1">
+                                                <XCircle className="h-3 w-3" /> Unverified
+                                            </Badge>
+                                        )}
+                                    </div>
 
-                                        <Select
-                                            value={user.status} // Status
-                                            onValueChange={(value) => dispatch(updateUserStatus({ userId: user._id, status: value }))}
-                                            disabled={currentUser?.role === "STUDENT"}
-                                        >
-                                            <SelectTrigger className="w-32 h-8 text-xs">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            {currentUser?.role !== "STUDENT" && (
+                                    {/* Footer / Actions */}
+                                    <div className="mt-auto pt-4 border-t flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            <Calendar className="h-3.5 w-3.5" />
+                                            <span>{new Date(user.createdAt).toLocaleDateString()}</span>
+                                        </div>
+
+                                        {currentUser?.role !== "STUDENT" && (
+                                            <Select
+                                                value={user.status}
+                                                onValueChange={(value) =>
+                                                    dispatch(updateUserStatus({ userId: user._id, status: value }))
+                                                }
+                                            >
+                                                <SelectTrigger className="w-[110px] h-8 text-xs">
+                                                    <SelectValue />
+                                                </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="ACTIVE">Active</SelectItem>
                                                     <SelectItem value="PENDING">Pending</SelectItem>
                                                     <SelectItem value="SUSPENDED">Suspended</SelectItem>
                                                 </SelectContent>
-                                            )}
-                                        </Select>
+                                            </Select>
+                                        )}
                                     </div>
-
-                                    {/* Meta grid */}
-                                    <div className="grid grid-cols-2 gap-3 text-xs text-muted-foreground">
-                                        <div>
-                                            <p className="uppercase tracking-wide text-[10px]">Verified</p>
-                                            <p className="font-medium text-foreground">
-                                                {user.isEmailVerified ? "Yes" : "No"}
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <p className="uppercase tracking-wide text-[10px]">Joined</p>
-                                            <p className="font-medium text-foreground">
-                                                {new Date(user.createdAt).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                    </div>
-
                                 </CardContent>
                             </Card>
-
                         ))}
                     </div>
 

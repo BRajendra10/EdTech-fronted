@@ -14,7 +14,7 @@ import * as Yup from "yup"
 export default function Login() {
     const navigate = useNavigate()
     const dispatch = useDispatch()
-    const [showPassword, setShowPassword] = useState(false)
+    const [showPassword, setShowPassword] = useState(false);
 
     // ✅ Validation Schema
     const validationSchema = Yup.object({
@@ -114,6 +114,7 @@ export default function Login() {
                 <div className="text-right text-sm">
                     <button
                         type="button"
+                        onClick={() => navigate("/forgot-password")}
                         className="text-[#3B8FF3] hover:underline"
                     >
                         Forgot password?

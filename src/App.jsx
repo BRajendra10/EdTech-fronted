@@ -16,6 +16,9 @@ import UsersPage from "./pages/Users.jsx";
 import CourseDetail from "./pages/CourseDetail.jsx";
 import CreateCoursePage from "./components/AddCourses.jsx";
 import EnrollmentsPage from "./pages/Enrollments.jsx";
+import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
+import VerifyResetOtp from "./pages/auth/VerifyResetOtp.jsx";
+import ResetPassword from "./pages/auth/ResetPassword.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -42,8 +45,11 @@ function App() {
 
 
           <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />}/>
+          <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-reset-otp" element={<VerifyResetOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </BrowserRouter>
     </div>
