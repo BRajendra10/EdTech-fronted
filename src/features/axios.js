@@ -43,7 +43,7 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 console.log("refresh failed now login")
 
-                window.location.href = "/auth/login";
+                window.location.href = "/login";
                 return Promise.reject(refreshError)
             }
         }

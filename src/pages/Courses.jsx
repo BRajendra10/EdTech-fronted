@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, MoreVertical, Eye, Pencil } from "lucide-react";
+import { ChevronLeft, ChevronRight, MoreVertical, Eye, Pencil, BookOpen } from "lucide-react";
 import CreateCourseModal from "../components/AddCourses";
 import EditCourse from "../components/EditCourse";
 
@@ -110,12 +110,30 @@ function CoursesPage() {
                         </Select>
                     </div>
 
-                    {/* Loading */}
-                    {(status === "pending" || (status === "fulfilled" && courses.length === 0)) && (
-                        <div className="flex items-center justify-center h-60">
-                            <p className="text-muted-foreground">
-                                {status === "pending" ? "Loading courses..." : "No courses found."}
+                    {status === "pending" && (
+                        <div className="h-60 flex items-center justify-center text-muted-foreground">
+                            Loading courses...
+                        </div>
+                    )}
+
+                    {status === "fulfilled" && courses.length === 0 && (
+                        <div className="h-60 flex flex-col items-center justify-center text-muted-foreground border rounded-lg border-dashed">
+                            <BookOpen className="h-10 w-10 mb-3 opacity-50" />
+                            <h3 className="font-semibold">No Courses Found</h3>
+                            <p className="text-sm text-center max-w-sm">
+                                Try adjusting your search or filter criteria.
+                                You can also create a new course.
                             </p>
+
+                            {currentUser?.role !== "STUDENT" && (
+                                <Button
+                                    variant="outline"
+                                    className="mt-4"
+                                    onClick={() => setIsOpen(true)}
+                                >
+                                    + Create Course
+                                </Button>
+                            )}
                         </div>
                     )}
 
