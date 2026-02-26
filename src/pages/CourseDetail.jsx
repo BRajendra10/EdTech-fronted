@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { ChevronRight } from "lucide-react"
+import { ChevronRight, PlayCircle } from "lucide-react"
 import { useDispatch, useSelector } from "react-redux"
 import { useParams } from "react-router-dom"
 import { fetchCourseById } from "../features/slice/courseSlice"
@@ -11,6 +11,12 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -27,6 +33,7 @@ const CourseDetail = () => {
     const [isModuleOpen, setIsModuleOpen] = useState(false)
     const [editingModule, setEditingModule] = useState(null)
     const [editingLesson, setEditingLesson] = useState(null)
+    const [playingLesson, setPlayingLesson] = useState(null)
 
     const dispatch = useDispatch()
     const { courseId } = useParams()
@@ -261,7 +268,7 @@ const CourseDetail = () => {
                                                         >
                                                             <div className="col-span-1">
                                                                 {module.order}.{lesson.order}
-                                            </div>
+                                                            </div>
 
                                                             <div className="col-span-6">
                                                                 {lesson.title}
@@ -272,6 +279,14 @@ const CourseDetail = () => {
                                                             </div>
 
                                                             <div className="col-span-2 flex justify-end items-center gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+                                                                    onClick={() => setPlayingLesson(lesson)}
+                                                                >
+                                                                    <PlayCircle className="h-4 w-4" />
+                                                                </Button>
                                                                 <span className="text-xs text-muted-foreground">
                                                                     Draft
                                                                 </span>
@@ -326,6 +341,23 @@ const CourseDetail = () => {
                 onClose={() => setEditingLesson(null)}
                 lesson={editingLesson}
             />
+
+            <Dialog open={!!playingLesson} onOpenChange={() => setPlayingLesson(null)}>
+                <DialogContent className="sm:max-w-5xl p-0 overflow-hidden bg-black border-zinc-800">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>{playingLesson?.title}</DialogTitle>
+                    </DialogHeader>
+                    <div className="aspect-video w-full flex items-center justify-center">
+                        {playingLesson?.videoUrl ? (
+                            <video src={playingLesson.videoUrl} controls className="w-full h-full" />
+                        ) : (
+                            <div className="text-muted-foreground">
+                                No video available
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
