@@ -1,128 +1,188 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, isPending, isRejected } from "@reduxjs/toolkit";
 import api from "../axios.js";
 
-// Fetch all enrollments (for student, their own, for admin, all)
+/* =========================================================
+   FETCH ENROLLMENTS (Student: own | Admin: all)
+========================================================= */
 export const fetchEnrollments = createAsyncThunk(
     "enrollments/fetchAll",
     async (_, { rejectWithValue }) => {
         try {
-            const response = await api.get("/enrollments");
-            return response.data;
+            const { data } = await api.get("/enrollments");
+            return data.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Failed to fetch enrollments");
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to fetch enrollments"
+            );
         }
     }
 );
 
-// Enroll in a specific course
+/* =========================================================
+   ENROLL INTO COURSE (Student)
+========================================================= */
 export const enrollInCourse = createAsyncThunk(
     "enrollments/enroll",
     async (courseId, { rejectWithValue }) => {
         try {
-            const response = await api.post(`/enrollments/enroll/${courseId}`);
-            return response.data;
+            const { data } = await api.post(`/enrollments/enroll/${courseId}`);
+            return data.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Enrollment failed");
+            return rejectWithValue(
+                error.response?.data?.message || "Enrollment failed"
+            );
         }
     }
 );
 
-// Update progress (e.g., mark lesson as complete)
-export const updateProgress = createAsyncThunk(
-    "enrollments/updateProgress",
-    async ({ courseId, lessonId }, { rejectWithValue }) => {
+/* =========================================================
+   COMPLETE COURSE (Student)
+========================================================= */
+export const completeEnrollment = createAsyncThunk(
+    "enrollments/complete",
+    async (courseId, { rejectWithValue }) => {
         try {
-            // NOTE: Assuming a new endpoint for progress. You will need to create this.
-            const response = await api.put(`/enrollments/progress/${courseId}`, { lessonId });
-            return response.data;
+            const { data } = await api.patch(
+                `/enrollments/complete/${courseId}`
+            );
+            return data.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Failed to update progress");
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to complete course"
+            );
         }
     }
 );
-// Cancel enrollment (for admins/instructors)
-export const cancelEnrollmentByAdmin = createAsyncThunk(
-    "enrollments/cancelByAdmin",
-    async ({ userId, courseId }, { rejectWithValue }) => {
+
+/* =========================================================
+   UPDATE ENROLLED STUDENTS (Admin / Instructor)
+========================================================= */
+export const updateEnrollmentStatus = createAsyncThunk(
+    "enrollments/updateStatus",
+    async ({ courseId, userId, status }, { rejectWithValue }) => {
         try {
-            const response = await api.patch("/enrollments/cancel", {
-                userId,
-                courseId,
-            });
-            return response.data;
+            const { data } = await api.patch(
+                `/enrollments/status/`,
+                { courseId, userId, status }
+            );
+
+            return data.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || "Failed to cancel enrollment");
+            return rejectWithValue(
+                error.response?.data?.message || "Failed to update status"
+            );
         }
     }
 );
+
+/* =========================================================
+   FETCH ENROLLED STUDENTS (Admin / Instructor)
+========================================================= */
+export const fetchEnrolledStudents = createAsyncThunk(
+    "enrollments/fetchStudents",
+    async (courseId, { rejectWithValue }) => {
+        try {
+            const { data } = await api.get(
+                `/enrollments/course/${courseId}/students`
+            );
+            return data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message ||
+                "Failed to fetch enrolled students"
+            );
+        }
+    }
+);
+
+/* =========================================================
+   SLICE
+========================================================= */
+
 const enrollmentSlice = createSlice({
     name: "enrollments",
     initialState: {
         enrollments: [],
-        status: "idle", // 'idle' | 'loading' | 'succeeded' | 'failed'
+        enrolledStudents: [],
+        enrollmentCourses: [],
+
+        status: "idle",
         error: null,
     },
+
     reducers: {
-        resetStatus: (state) => {
-            state.status = "idle";
+        resetEnrollmentState: (state) => {
+            state.loading = false;
+            state.actionLoading = false;
             state.error = null;
-        }
+        },
     },
+
     extraReducers: (builder) => {
         builder
-            // --- Fetch Enrollments ---
-            .addCase(fetchEnrollments.pending, (state) => {
-                state.status = "loading";
+
+            /* ================= FETCH ENROLLMENTS ================= */
+            .addCase(fetchEnrollments.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+
+                state.enrollments = action.payload.enrollments;
+                state.enrollmentCourses = action.payload.courses;
+            })
+
+            /* ================= ENROLL ================= */
+            .addCase(enrollInCourse.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+                state.enrollments.unshift(action.payload);
+            })
+
+            /* ================= COMPLETE COURSE ================= */
+            .addCase(completeEnrollment.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+
+                const updated = action.payload;
+                const index = state.enrollments.findIndex(
+                    (e) => e._id === updated._id
+                );
+
+                if (index !== -1) {
+                    state.enrollments[index] = updated;
+                }
+            })
+
+            /* ================= CANCEL (ADMIN) ================= */
+            .addCase(updateEnrollmentStatus.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+
+                const updated = action.payload;
+
+                const index = state.enrollments.findIndex(
+                    (e) => e._id === updated._id
+                );
+
+                if (index !== -1) {
+                    state.enrollments[index] = updated;
+                }
+            })
+
+            /* ================= FETCH STUDENTS ================= */
+            .addCase(fetchEnrolledStudents.fulfilled, (state, action) => {
+                state.status = "fulfilled";
+                state.enrolledStudents = action.payload;
+            })
+
+            // Handle ALL pending states
+            .addMatcher(isPending(fetchEnrollments, enrollInCourse, completeEnrollment, updateEnrollmentStatus, fetchEnrolledStudents), (state) => {
+                state.status = "pending";
                 state.error = null;
             })
-            .addCase(fetchEnrollments.fulfilled, (state, action) => {
-                state.status = "succeeded";
-                // Assuming API returns { data: [...] } or just [...]
-                state.enrollments = action.payload.data || action.payload;
-            })
-            .addCase(fetchEnrollments.rejected, (state, action) => {
-                state.status = "failed";
+
+            // Handle ALL rejected states
+            .addMatcher(isRejected(fetchEnrollments, enrollInCourse, completeEnrollment, updateEnrollmentStatus, fetchEnrolledStudents), (state, action) => {
+                state.status = "rejected";
                 state.error = action.payload;
             })
-
-            // --- Enroll in Course ---
-            .addCase(enrollInCourse.pending, (state) => {
-                state.status = "loading";
-            })
-            .addCase(enrollInCourse.fulfilled, (state, action) => {
-                state.status = "succeeded";
-                // Optionally push to state if API returns the new enrollment
-                // const newEnrollment = action.payload.data || action.payload;
-                // state.enrollments.push(newEnrollment);
-            })
-            .addCase(enrollInCourse.rejected, (state, action) => {
-                state.status = "failed";
-                state.error = action.payload;
-            })
-
-            // --- Update Progress ---
-            .addCase(updateProgress.fulfilled, (state, action) => {
-                const updatedEnrollment = action.payload.data || action.payload;
-                const index = state.enrollments.findIndex(e => e._id === updatedEnrollment._id);
-                if (index !== -1) {
-                    state.enrollments[index] = updatedEnrollment;
-                }
-            })
-
-            // --- Cancel Enrollment (Admin) ---
-            .addCase(cancelEnrollmentByAdmin.fulfilled, (state, action) => {
-                state.status = "succeeded";
-                const cancelledEnrollment = action.payload.data || action.payload;
-                const index = state.enrollments.findIndex(
-                    (e) => e._id === cancelledEnrollment._id
-                );
-                if (index !== -1) {
-                    // Update the status of the specific enrollment in the list
-                    state.enrollments[index].status = "CANCELLED";
-                }
-            });;
     },
 });
 
-export const { resetStatus } = enrollmentSlice.actions;
+export const { resetEnrollmentState } = enrollmentSlice.actions;
 export default enrollmentSlice.reducer;

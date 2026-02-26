@@ -44,7 +44,7 @@ export default function Sidebar() {
     };
 
     return (
-        <Aside className="w-64 bg-background text-foreground border-r-2 flex flex-col">
+        <Aside className="w-64 dark bg-background text-foreground border-r-2 flex flex-col">
             {/* Logo */}
             <SidebarHeader className="flex flex-row justify-start gap-3 p-4">
                 <div className="h-10 w-10 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-semibold">

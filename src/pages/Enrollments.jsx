@@ -29,16 +29,17 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 // Ensure you have this action in your slice
-import { fetchEnrollments } from "../features/slice/enrollmentSlice";
+import { fetchEnrollments, updateEnrollmentStatus } from "../features/slice/enrollmentSlice";
 
 export default function EnrollmentsPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
+    const [courseFilter, setCourseFilter] = useState("ALL");
 
     // Fallback to empty array/idle status if slice isn't fully set up yet
-    const { enrollments = [], status } = useSelector((state) => state.enrollments || {});
+    const { enrollments = [], enrollmentCourses, status } = useSelector((state) => state.enrollments || {});
     const { currentUser } = useSelector((state) => state.users);
 
     useEffect(() => {
@@ -50,15 +51,22 @@ export default function EnrollmentsPage() {
 
     // Filter logic
     const filteredEnrollments = enrollments.filter((item) => {
-        const matchesStatus = statusFilter === "ALL" || item.status === statusFilter;
+        const matchesStatus =
+            statusFilter === "ALL" || item.status === statusFilter;
+
+        const matchesCourse =
+            courseFilter === "ALL" ||
+            item.courseId?._id === courseFilter;
 
         const searchLower = searchTerm.toLowerCase();
         const courseTitle = item.courseId?.title?.toLowerCase() || "";
         const studentName = item.userId?.fullName?.toLowerCase() || "";
 
-        const matchesSearch = courseTitle.includes(searchLower) || studentName.includes(searchLower);
+        const matchesSearch =
+            courseTitle.includes(searchLower) ||
+            studentName.includes(searchLower);
 
-        return matchesStatus && matchesSearch;
+        return matchesStatus && matchesSearch && matchesCourse;
     });
 
     const isAdmin = currentUser?.role === "ADMIN" || currentUser?.role === "INSTRUCTOR";
@@ -95,6 +103,21 @@ export default function EnrollmentsPage() {
                                 <SelectItem value="ACTIVE">Active</SelectItem>
                                 <SelectItem value="COMPLETED">Completed</SelectItem>
                                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={courseFilter} onValueChange={setCourseFilter}>
+                            <SelectTrigger className="w-[220px] bg-background">
+                                <SelectValue placeholder="Filter by course" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                                <SelectItem value="ALL">All Courses</SelectItem>
+
+                                {enrollmentCourses?.map((course) => (
+                                    <SelectItem key={course._id} value={course._id}>
+                                        {course.title}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -169,6 +192,26 @@ function StudentEnrollmentGrid({ data, navigate }) {
 }
 
 function AdminEnrollmentTable({ data }) {
+    const dispatch = useDispatch();
+    const { status } = useSelector((state) => state.enrollments);
+
+    const handleStatusToggle = (enrollment) => {
+        const newStatus =
+            enrollment.status === "ACTIVE" ? "CANCELLED" : "ACTIVE";
+
+        console.log(newStatus, enrollment.courseId)
+
+        dispatch(
+            updateEnrollmentStatus({
+                courseId: enrollment.courseId?._id,
+                userId: enrollment.userId?._id,
+                status: newStatus,
+            })
+        );
+    };
+
+
+
     return (
         <div className="rounded-md border bg-background">
             <Table>
@@ -179,41 +222,93 @@ function AdminEnrollmentTable({ data }) {
                         <TableHead>Status</TableHead>
                         <TableHead>Progress</TableHead>
                         <TableHead>Enrolled Date</TableHead>
+                        <TableHead>Action</TableHead>
                     </TableRow>
                 </TableHeader>
+
                 <TableBody>
                     {data.map((enrollment) => (
                         <TableRow key={enrollment._id}>
                             <TableCell className="font-medium">
                                 <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                        {enrollment.userId?.fullName?.[0] || "U"}
+                                    <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                                        {enrollment.userId?.avatar ? (
+                                            <img
+                                                src={enrollment.userId.avatar}
+                                                alt={enrollment.userId?.fullName}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-xs font-bold text-primary">
+                                                {enrollment.userId?.fullName?.[0] || "U"}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex flex-col">
                                         <span>{enrollment.userId?.fullName}</span>
-                                        <span className="text-xs text-muted-foreground">{enrollment.userId?.email}</span>
+                                        <span className="text-xs text-muted-foreground">
+                                            {enrollment.userId?.email}
+                                        </span>
                                     </div>
                                 </div>
                             </TableCell>
-                            <TableCell className="max-w-[200px] truncate" title={enrollment.courseId?.title}>
+
+                            <TableCell className="max-w-[200px] truncate">
                                 {enrollment.courseId?.title}
                             </TableCell>
+
                             <TableCell>
-                                <Badge variant="outline" className={
-                                    enrollment.status === "COMPLETED" ? "text-green-600 bg-green-50 border-green-200" :
-                                        enrollment.status === "ACTIVE" ? "text-blue-600 bg-blue-50 border-blue-200" : ""
-                                }>
+                                <Badge
+                                    variant="outline"
+                                    className={
+                                        enrollment.status === "COMPLETED"
+                                            ? "text-green-600 bg-green-50 border-green-200"
+                                            : enrollment.status === "ACTIVE"
+                                                ? "text-blue-600 bg-blue-50 border-blue-200"
+                                                : "text-red-600 bg-red-50 border-red-200"
+                                    }
+                                >
                                     {enrollment.status}
                                 </Badge>
                             </TableCell>
+
                             <TableCell className="w-[180px]">
                                 <div className="flex items-center gap-2">
-                                    <Progress value={enrollment.progress || 0} className="h-2 w-20" />
-                                    <span className="text-xs text-muted-foreground">{Math.round(enrollment.progress || 0)}%</span>
+                                    <Progress
+                                        value={enrollment.progress || 0}
+                                        className="h-2 w-20"
+                                    />
+                                    <span className="text-xs text-muted-foreground">
+                                        {Math.round(enrollment.progress || 0)}%
+                                    </span>
                                 </div>
                             </TableCell>
+
                             <TableCell className="text-muted-foreground text-sm">
-                                {new Date(enrollment.createdAt).toLocaleDateString()}
+                                {new Date(
+                                    enrollment.createdAt
+                                ).toLocaleDateString()}
+                            </TableCell>
+
+                            <TableCell>
+                                {enrollment.status !== "COMPLETED" && (
+                                    <Button
+                                        size="sm"
+                                        variant={
+                                            enrollment.status === "ACTIVE"
+                                                ? "destructive"
+                                                : "secondary"
+                                        }
+                                        disabled={status === "pending"}
+                                        onClick={() =>
+                                            handleStatusToggle(enrollment)
+                                        }
+                                    >
+                                        {enrollment.status === "ACTIVE"
+                                            ? "Cancel"
+                                            : "Activate"}
+                                    </Button>
+                                )}
                             </TableCell>
                         </TableRow>
                     ))}

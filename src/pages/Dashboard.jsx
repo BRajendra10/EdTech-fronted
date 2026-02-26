@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useSelector } from "react-redux"
 import {
     Card,
     CardContent,
@@ -14,7 +15,9 @@ import {
     IndianRupee,
     TrendingUp,
     Layers,
-    ArrowUpRight
+    ArrowUpRight,
+    GraduationCap,
+    Clock
 } from "lucide-react"
 
 import {
@@ -29,6 +32,7 @@ import {
     Pie,
     Cell,
 } from "recharts"
+import api from "../features/axios"
 
 /* ---------------- MOCK DATA ---------------- */
 
@@ -84,8 +88,10 @@ const mockData = {
     ],
 }
 
-export default function AdminDashboard() {
+export default function Dashboard() {
+    const { currentUser } = useSelector((state) => state.users);
     const [stats, setStats] = useState(mockData);
+    const role = currentUser?.role || "STUDENT";
 
     const publishRate = (
         (stats.publishedCourses / stats.totalCourses) *
@@ -121,26 +127,34 @@ export default function AdminDashboard() {
     ]
 
     useEffect(() => {
-        const eventSource = new EventSource(
-            "http://localhost:4000/api/v1/users/admin/stream",
-            { withCredentials: true }   // 🔥 important
-        );
+        let eventSource;
 
-        eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log(data);
-            setStats(data);
+        const rolePath = role === "ADMIN" ? "admin" : role === "INSTRUCTOR" ? "instructor" : "student";
+
+        const connect = () => {
+            eventSource = new EventSource(
+                `http://localhost:4000/api/v1/users/${rolePath}/stream`,
+                { withCredentials: true }
+            );
+
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                setStats(data);
+            };
+
+            eventSource.onerror = async (err) => {
+                console.error("SSE error:", err);
+                console.log(err);
+                eventSource.close();
+            };
         };
 
-        eventSource.onerror = (err) => {
-            console.error("SSE error:", err);
-            eventSource.close();
-        };
+        connect();
+    }, [role]);
 
-        return () => {
-            eventSource.close();
-        };
-    }, []);
+    if (role === "STUDENT") {
+        return <StudentDashboardView stats={stats} />;
+    }
 
     return (
         <div className="space-y-8">
@@ -148,24 +162,24 @@ export default function AdminDashboard() {
             {/* ================= KPI CARDS ================= */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 <StatCard
-                    title="Users"
+                    title={role === "ADMIN" ? "Total Users" : "My Students"}
                     value={stats.totalUsers.toLocaleString()}
                     icon={Users}
                 />
                 <StatCard
-                    title="Courses"
+                    title={role === "ADMIN" ? "Total Courses" : "My Courses"}
                     value={stats.totalCourses}
                     icon={Layers}
                 />
                 <StatCard
-                    title="Enrollments"
+                    title={role === "ADMIN" ? "Total Enrollments" : "Course Enrollments"}
                     value={stats.totalEnrollments.toLocaleString()}
                     icon={TrendingUp}
                 />
                 <StatCard
-                    title="Publish Rate"
-                    value={`${publishRate}%`}
-                    icon={BookOpen}
+                    title={role === "ADMIN" ? "Publish Rate" : "Total Revenue"}
+                    value={role === "ADMIN" ? `${publishRate}%` : `₹${stats.totalRevenue.toLocaleString()}`}
+                    icon={role === "ADMIN" ? BookOpen : IndianRupee}
                 />
             </div>
 
@@ -322,6 +336,45 @@ export default function AdminDashboard() {
             </Card>
         </div>
     )
+}
+
+function StudentDashboardView({ stats }) {
+    return (
+        <div className="space-y-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <StatCard
+                    title="Enrolled Courses"
+                    value={stats.totalEnrollments || 12}
+                    icon={BookOpen}
+                />
+                <StatCard
+                    title="Active Courses"
+                    value={stats.publishedCourses || 4}
+                    icon={Layers}
+                />
+                <StatCard
+                    title="Completed"
+                    value={stats.draftCourses || 8}
+                    icon={GraduationCap}
+                />
+                <StatCard
+                    title="Learning Hours"
+                    value="124h"
+                    icon={Clock}
+                />
+            </div>
+
+            <Card className="border shadow-sm">
+                <CardHeader>
+                    <CardTitle>My Learning Activity</CardTitle>
+                    <CardDescription>Keep up the good work!</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
+                    Activity Chart Placeholder
+                </CardContent>
+            </Card>
+        </div>
+    );
 }
 
 /* ---------------- SUB COMPONENT ---------------- */
