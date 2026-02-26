@@ -34,6 +34,15 @@ The frontend enforces **role-based visibility** and actions based on logged-in u
 
 ---
 
+🎥 **Demo Preview**
+
+The current preview showcases core functionality of the project.  
+A refreshed walkthrough highlighting recent UI improvements will be added soon.
+
+**Watch Demo:** [View Here](https://drive.google.com/file/d/1zXOpIP9RiClN1xvF_3alwe3NP_GN4pad/view?usp=drivesdk)
+
+---
+
 ## 📚 Dashboard Modules
 
 ### 📊 Dashboard
@@ -147,7 +156,7 @@ src/
 ✅ Modules & Lessons CRUD  
 ✅ Users Management  
 ✅ Role-Based UI  
-✅ Enrollment & Progress Tracking
+✅ Enrollment & Progress Tracking  
 ✅ Settings Page
 
 ---
