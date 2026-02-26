@@ -32,7 +32,7 @@ export default function Login() {
             password: "",
         },
         validationSchema,
-        onSubmit: async (values, { setSubmitting }) => {
+        onSubmit: async (values) => {
             try {
                 await dispatch(login(values)).unwrap()
                 toast.success("Login successful")
@@ -45,8 +45,6 @@ export default function Login() {
                 } else {
                     toast.error(error || "Login failed")
                 }
-            } finally {
-                setSubmitting(false)
             }
         },
     })
@@ -136,7 +134,7 @@ export default function Login() {
                 <div className="text-center text-sm text-gray-500 pt-2">
                     Don’t have an account?{" "}
                     <button
-                        type="button"
+                        type="submit"
                         onClick={() => navigate("/register")}
                         className="font-medium text-[#3B8FF3] hover:underline"
                     >

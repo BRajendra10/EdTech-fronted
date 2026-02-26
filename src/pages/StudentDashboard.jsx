@@ -4,14 +4,16 @@ import {
     CardContent,
     CardHeader,
     CardTitle,
+    CardDescription,
 } from "../components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
 
 import {
-    Users,
-    Layers,
-    TrendingUp,
     BookOpen,
+    Clock,
+    GraduationCap,
+    TrendingUp,
 } from "lucide-react";
 
 import {
@@ -30,26 +32,21 @@ import {
 /* ---------------- INITIAL STATE ---------------- */
 
 const initialState = {
-    totalUsers: 0,
-    totalCourses: 0,
-    publishedCourses: 0,
-    draftCourses: 0,
-    unpublishedCourses: 0,
-    publishingRate: 0,
     totalEnrollments: 0,
     activeEnrollments: 0,
+    completedEnrollments: 0,
     recentEnrollments: [],
     monthlyEnrollments: [],
 };
 
-export default function AdminDashboard() {
+export default function StudentDashboard() {
     const [stats, setStats] = useState(initialState);
 
     /* ---------------- SSE CONNECTION ---------------- */
 
     useEffect(() => {
         const eventSource = new EventSource(
-            "http://localhost:4000/api/v1/users/admin/stream",
+            "http://localhost:4000/api/v1/users/user/stream",
             { withCredentials: true }
         );
 
@@ -84,15 +81,15 @@ export default function AdminDashboard() {
         };
     });
 
-    const courseStatusData = [
-        { name: "Published", value: stats.publishedCourses },
-        { name: "Draft", value: stats.draftCourses },
-        { name: "Unpublished", value: stats.unpublishedCourses },
+    /* ---------------- PIE DATA ---------------- */
+
+    const progressData = [
+        { name: "Active", value: stats.activeEnrollments },
+        { name: "Completed", value: stats.completedEnrollments },
     ];
 
     const COLORS = [
         "var(--primary)",
-        "var(--destructive)",
         "var(--secondary)",
     ];
 
@@ -101,11 +98,30 @@ export default function AdminDashboard() {
 
             {/* ================= KPI CARDS ================= */}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <StatCard title="Total Users" value={stats.totalUsers} icon={Users} />
-                <StatCard title="Total Courses" value={stats.totalCourses} icon={Layers} />
-                <StatCard title="Total Enrollments" value={stats.totalEnrollments} icon={TrendingUp} />
-                <StatCard title="Publishing Rate" value={`${stats.publishingRate}%`} icon={BookOpen} />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <StatCard
+                    title="Total Enrollments"
+                    value={stats.totalEnrollments}
+                    icon={BookOpen}
+                />
+
+                <StatCard
+                    title="Active Courses"
+                    value={stats.activeEnrollments}
+                    icon={Clock}
+                />
+
+                <StatCard
+                    title="Completed Courses"
+                    value={stats.completedEnrollments}
+                    icon={GraduationCap}
+                />
+
+                <StatCard
+                    title="This Year Activity"
+                    value={monthlyData.reduce((sum, m) => sum + m.enrollments, 0)}
+                    icon={TrendingUp}
+                />
             </div>
 
             {/* ================= CHARTS ================= */}
@@ -116,7 +132,10 @@ export default function AdminDashboard() {
 
                 <Card className="col-span-2 border shadow-sm">
                     <CardHeader>
-                        <CardTitle>Monthly Enrollments</CardTitle>
+                        <CardTitle>Monthly Learning Activity</CardTitle>
+                        <CardDescription>
+                            Enrollments this year
+                        </CardDescription>
                     </CardHeader>
 
                     <CardContent className="h-[350px]">
@@ -140,24 +159,24 @@ export default function AdminDashboard() {
                     </CardContent>
                 </Card>
 
-                {/* ---- DONUT CHART ---- */}
+                {/* ---- PIE CHART ---- */}
 
                 <Card className="border shadow-sm">
                     <CardHeader>
-                        <CardTitle>Course Status</CardTitle>
+                        <CardTitle>Course Progress</CardTitle>
                     </CardHeader>
 
                     <CardContent className="h-[350px]">
                         <ResponsiveContainer>
                             <PieChart>
                                 <Pie
-                                    data={courseStatusData}
+                                    data={progressData}
                                     dataKey="value"
                                     innerRadius={80}
                                     outerRadius={120}
                                     paddingAngle={4}
                                 >
-                                    {courseStatusData.map((_, index) => (
+                                    {progressData.map((_, index) => (
                                         <Cell key={index} fill={COLORS[index]} />
                                     ))}
                                 </Pie>
@@ -172,58 +191,43 @@ export default function AdminDashboard() {
 
             <Card className="border shadow-sm">
                 <CardHeader>
-                    <CardTitle>Recent Enrollments</CardTitle>
+                    <CardTitle>Recent Courses</CardTitle>
                 </CardHeader>
 
                 <CardContent className="space-y-6">
                     {stats.recentEnrollments.length > 0 ? (
-                        stats.recentEnrollments.map((item) => {
-                            const initials = item.userId?.fullName
-                                ?.split(" ")
-                                .map((n) => n[0])
-                                .join("");
+                        stats.recentEnrollments.map((item) => (
+                            <div
+                                key={item._id}
+                                className="flex items-start justify-between gap-4"
+                            >
+                                <div className="space-y-1">
+                                    <p className="text-sm font-medium">
+                                        {item.courseId?.title}
+                                    </p>
 
-                            return (
-                                <div
-                                    key={item._id}
-                                    className="flex items-start justify-between gap-4"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
-                                            {initials}
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <p className="text-sm">
-                                                <span className="font-medium">
-                                                    {item.userId?.fullName}
-                                                </span>{" "}
-                                                enrolled in{" "}
-                                                <span className="font-medium">
-                                                    {item.courseId?.title}
-                                                </span>
-                                            </p>
-
-                                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                                <span>
-                                                    {new Date(item.createdAt).toLocaleDateString("en-IN")}
-                                                </span>
-                                            </div>
-                                        </div>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                        <span>
+                                            {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                                        </span>
                                     </div>
-
-                                    <Badge
-                                        variant="outline"
-                                        className="text-blue-600 bg-blue-50 border-blue-200"
-                                    >
-                                        {item.status}
-                                    </Badge>
                                 </div>
-                            );
-                        })
+
+                                <Badge
+                                    variant="outline"
+                                    className={
+                                        item.status === "ACTIVE"
+                                            ? "text-blue-600 bg-blue-50 border-blue-200"
+                                            : "text-green-600 bg-green-50 border-green-200"
+                                    }
+                                >
+                                    {item.status}
+                                </Badge>
+                            </div>
+                        ))
                     ) : (
                         <p className="text-sm text-muted-foreground">
-                            No recent enrollments yet.
+                            No enrollments yet.
                         </p>
                     )}
                 </CardContent>

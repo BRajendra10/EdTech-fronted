@@ -21,9 +21,7 @@ export const signup = createAsyncThunk(
     "user/signup",
     async (formData, { rejectWithValue }) => {
         try {
-            const response = await api.post("/signup", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            const response = await api.post("/users/signup", formData);
 
             // signup only sends message, NOT user
             return response.data.message;
@@ -40,7 +38,7 @@ export const verifyOtp = createAsyncThunk(
     "user/verifyOtp",
     async ({ email, verificationCode }, { rejectWithValue }) => {
         try {
-            const response = await api.post("/verify-otp", {
+            const response = await api.post("/users/verify-otp", {
                 email,
                 verificationCode,
             });
@@ -59,7 +57,7 @@ export const resendVerificationOtp = createAsyncThunk(
     "user/resendVerificationOtp",
     async ({ email }, { rejectWithValue }) => {
         try {
-            const response = await api.post("/resend-verification-otp", {
+            const response = await api.post("/users/resend-verification-otp", {
                 email,
             });
 

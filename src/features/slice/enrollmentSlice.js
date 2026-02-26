@@ -59,12 +59,13 @@ export const completeEnrollment = createAsyncThunk(
 ========================================================= */
 export const updateEnrollmentStatus = createAsyncThunk(
     "enrollments/updateStatus",
-    async ({ courseId, userId, status }, { rejectWithValue }) => {
+    async ({ courseId, userId, status }, { dispatch, rejectWithValue }) => {
         try {
             const { data } = await api.patch(
                 `/enrollments/status/`,
                 { courseId, userId, status }
             );
+            dispatch(fetchEnrollments()); // Re-fetch current page after update
 
             return data.data;
         } catch (error) {
@@ -105,28 +106,25 @@ const enrollmentSlice = createSlice({
         enrollments: [],
         enrolledStudents: [],
         enrollmentCourses: [],
-
         status: "idle",
         error: null,
     },
 
     reducers: {
-        resetEnrollmentState: (state) => {
-            state.loading = false;
-            state.actionLoading = false;
+        resetEnrollmentState: (state) => { // This seems unused but I'll keep it and fix it
+            state.status = "idle";
             state.error = null;
         },
     },
 
     extraReducers: (builder) => {
         builder
-
             /* ================= FETCH ENROLLMENTS ================= */
             .addCase(fetchEnrollments.fulfilled, (state, action) => {
                 state.status = "fulfilled";
-
-                state.enrollments = action.payload.enrollments;
-                state.enrollmentCourses = action.payload.courses;
+                const { enrollments, uniqueCourses } = action.payload;
+                state.enrollments = enrollments.docs;
+                state.enrollmentCourses = uniqueCourses;
             })
 
             /* ================= ENROLL ================= */
@@ -152,16 +150,7 @@ const enrollmentSlice = createSlice({
             /* ================= CANCEL (ADMIN) ================= */
             .addCase(updateEnrollmentStatus.fulfilled, (state, action) => {
                 state.status = "fulfilled";
-
-                const updated = action.payload;
-
-                const index = state.enrollments.findIndex(
-                    (e) => e._id === updated._id
-                );
-
-                if (index !== -1) {
-                    state.enrollments[index] = updated;
-                }
+                // No state change needed here as fetchEnrollments is re-dispatched
             })
 
             /* ================= FETCH STUDENTS ================= */

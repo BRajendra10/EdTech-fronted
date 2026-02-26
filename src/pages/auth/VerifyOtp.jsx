@@ -8,10 +8,13 @@ import { Formik, Form, Field, ErrorMessage } from "formik"
 import * as Yup from "yup"
 import api from "../../features/axios"
 import AuthLayout from "./AuthLayout"
+import { useDispatch } from "react-redux"
+import { resendVerificationOtp, verifyOtp } from "../../features/slice/userSlice"
 
 export default function VerifyOtp() {
-    const navigate = useNavigate()
-    const location = useLocation()
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const location = useLocation();
     const email = location.state?.email
 
     useEffect(() => {
@@ -37,10 +40,7 @@ export default function VerifyOtp() {
                 validationSchema={validationSchema}
                 onSubmit={async (values, { setSubmitting }) => {
                     try {
-                        await api.post("/verify-otp", {
-                            email,
-                            verificationCode: values.otp,
-                        })
+                        await dispatch(verifyOtp(values))
 
                         toast.success("Email verified successfully")
                         navigate("/login")
@@ -81,6 +81,7 @@ export default function VerifyOtp() {
                             Didn’t receive the code?{" "}
                             <button
                                 type="button"
+                                onClick={() => dispatch(resendVerificationOtp({ email }))}
                                 className="text-[#3B8FF3] font-medium hover:underline"
                             >
                                 Resend OTP

@@ -19,6 +19,7 @@ import EnrollmentsPage from "./pages/Enrollments.jsx";
 import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import VerifyResetOtp from "./pages/auth/VerifyResetOtp.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
+import RoleBasedDashboard from "./pages/RolebasedDashboard.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -35,7 +36,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<DashboardLayout />}>
-            <Route index element={<Dashboard />} />
+            <Route index element={<RoleBasedDashboard />} />
             <Route path="settings" element={<Settings />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="courses" element={<CoursesPage />} />

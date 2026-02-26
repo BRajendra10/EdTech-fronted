@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Search, BookOpen } from "lucide-react";
+import { Search, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import {
     Card,
     CardContent,
@@ -37,17 +37,25 @@ export default function EnrollmentsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [courseFilter, setCourseFilter] = useState("ALL");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // You can adjust this number
 
     // Fallback to empty array/idle status if slice isn't fully set up yet
-    const { enrollments = [], enrollmentCourses, status } = useSelector((state) => state.enrollments || {});
+    const {
+        enrollments = [],
+        enrollmentCourses,
+        status,
+    } = useSelector((state) => state.enrollments || {});
     const { currentUser } = useSelector((state) => state.users);
 
     useEffect(() => {
-        // Dispatch action to fetch enrollments when page loads
-        if (dispatch && fetchEnrollments) {
-            dispatch(fetchEnrollments());
-        }
+        dispatch(fetchEnrollments());
     }, [dispatch]);
+
+    // Reset to page 1 when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, courseFilter]);
 
     // Filter logic
     const filteredEnrollments = enrollments.filter((item) => {
@@ -68,6 +76,13 @@ export default function EnrollmentsPage() {
 
         return matchesStatus && matchesSearch && matchesCourse;
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredEnrollments.length / itemsPerPage);
+    const paginatedEnrollments = filteredEnrollments.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
 
     const isAdmin = currentUser?.role === "ADMIN" || currentUser?.role === "INSTRUCTOR";
 
@@ -132,10 +147,35 @@ export default function EnrollmentsPage() {
                             <BookOpen className="h-8 w-8 mb-2 opacity-50" />
                             <p>No enrollments found.</p>
                         </div>
-                    ) : isAdmin ? (
-                        <AdminEnrollmentTable data={filteredEnrollments} />
                     ) : (
-                        <StudentEnrollmentGrid data={filteredEnrollments} navigate={navigate} />
+                        <>
+                            {isAdmin ? (
+                                <AdminEnrollmentTable data={paginatedEnrollments} />
+                            ) : (
+                                <StudentEnrollmentGrid data={paginatedEnrollments} navigate={navigate} />
+                            )}
+                            <div className="flex items-center justify-end gap-3 mt-4">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={currentPage === 1}
+                                    onClick={() => setCurrentPage(currentPage - 1)}
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <span className="text-sm font-medium">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    disabled={currentPage === totalPages}
+                                    onClick={() => setCurrentPage(currentPage + 1)}
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </>
                     )}
                 </CardContent>
             </Card>
