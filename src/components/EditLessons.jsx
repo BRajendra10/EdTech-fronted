@@ -23,7 +23,6 @@ const EditLesson = ({ isOpen, onClose, lesson }) => {
         initialValues: {
             title: lesson?.title || "",
             videoFile: null,
-            thumbnail: null,
         },
         enableReinitialize: true,
         onSubmit: async (values) => {
@@ -33,7 +32,6 @@ const EditLesson = ({ isOpen, onClose, lesson }) => {
             const formData = new FormData()
             if (values.title !== lesson.title) formData.append("title", values.title)
             if (values.videoFile) formData.append("videoFile", values.videoFile)
-            if (values.thumbnail) formData.append("thumbnail", values.thumbnail)
 
             await dispatch(
                 updateLesson({
@@ -96,18 +94,6 @@ const EditLesson = ({ isOpen, onClose, lesson }) => {
                             accept="video/*"
                             onChange={(e) =>
                                 formik.setFieldValue("videoFile", e.target.files[0])
-                            }
-                        />
-                    </div>
-
-                    {/* Thumbnail */}
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium">Thumbnail Image</label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                                formik.setFieldValue("thumbnail", e.target.files[0])
                             }
                         />
                     </div>

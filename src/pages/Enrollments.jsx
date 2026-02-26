@@ -95,7 +95,7 @@ export default function EnrollmentsPage() {
                             />
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-[180px] bg-background">
+                            <SelectTrigger className="w-full sm:w-[180px] bg-background">
                                 <SelectValue placeholder="Filter by status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -106,7 +106,7 @@ export default function EnrollmentsPage() {
                             </SelectContent>
                         </Select>
                         <Select value={courseFilter} onValueChange={setCourseFilter}>
-                            <SelectTrigger className="w-[220px] bg-background">
+                            <SelectTrigger className="w-full sm:w-[220px] bg-background">
                                 <SelectValue placeholder="Filter by course" />
                             </SelectTrigger>
 
@@ -213,107 +213,194 @@ function AdminEnrollmentTable({ data }) {
 
 
     return (
-        <div className="rounded-md border bg-background">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Course</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Progress</TableHead>
-                        <TableHead>Enrolled Date</TableHead>
-                        <TableHead>Action</TableHead>
-                    </TableRow>
-                </TableHeader>
+        <>
+            {/* Desktop Table View */}
+            <div className="hidden lg:block rounded-md border bg-background">
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Student</TableHead>
+                            <TableHead>Course</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Progress</TableHead>
+                            <TableHead>Enrolled Date</TableHead>
+                            <TableHead>Action</TableHead>
+                        </TableRow>
+                    </TableHeader>
 
-                <TableBody>
-                    {data.map((enrollment) => (
-                        <TableRow key={enrollment._id}>
-                            <TableCell className="font-medium">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
-                                        {enrollment.userId?.avatar ? (
-                                            <img
-                                                src={enrollment.userId.avatar}
-                                                alt={enrollment.userId?.fullName}
-                                                className="h-full w-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-xs font-bold text-primary">
-                                                {enrollment.userId?.fullName?.[0] || "U"}
+                    <TableBody>
+                        {data.map((enrollment) => (
+                            <TableRow key={enrollment._id}>
+                                <TableCell className="font-medium">
+                                    <div className="flex items-center gap-3">
+                                        <div className="h-8 w-8 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                                            {enrollment.userId?.avatar ? (
+                                                <img
+                                                    src={enrollment.userId.avatar}
+                                                    alt={enrollment.userId?.fullName}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-xs font-bold text-primary">
+                                                    {enrollment.userId?.fullName?.[0] || "U"}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span>{enrollment.userId?.fullName}</span>
+                                            <span className="text-xs text-muted-foreground">
+                                                {enrollment.userId?.email}
                                             </span>
-                                        )}
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <span>{enrollment.userId?.fullName}</span>
-                                        <span className="text-xs text-muted-foreground">
-                                            {enrollment.userId?.email}
-                                        </span>
-                                    </div>
-                                </div>
-                            </TableCell>
+                                </TableCell>
 
-                            <TableCell className="max-w-[200px] truncate">
-                                {enrollment.courseId?.title}
-                            </TableCell>
+                                <TableCell className="max-w-[200px] truncate">
+                                    {enrollment.courseId?.title}
+                                </TableCell>
 
-                            <TableCell>
-                                <Badge
-                                    variant="outline"
-                                    className={
-                                        enrollment.status === "COMPLETED"
-                                            ? "text-green-600 bg-green-50 border-green-200"
-                                            : enrollment.status === "ACTIVE"
-                                                ? "text-blue-600 bg-blue-50 border-blue-200"
-                                                : "text-red-600 bg-red-50 border-red-200"
-                                    }
-                                >
-                                    {enrollment.status}
-                                </Badge>
-                            </TableCell>
-
-                            <TableCell className="w-[180px]">
-                                <div className="flex items-center gap-2">
-                                    <Progress
-                                        value={enrollment.progress || 0}
-                                        className="h-2 w-20"
-                                    />
-                                    <span className="text-xs text-muted-foreground">
-                                        {Math.round(enrollment.progress || 0)}%
-                                    </span>
-                                </div>
-                            </TableCell>
-
-                            <TableCell className="text-muted-foreground text-sm">
-                                {new Date(
-                                    enrollment.createdAt
-                                ).toLocaleDateString()}
-                            </TableCell>
-
-                            <TableCell>
-                                {enrollment.status !== "COMPLETED" && (
-                                    <Button
-                                        size="sm"
-                                        variant={
-                                            enrollment.status === "ACTIVE"
-                                                ? "destructive"
-                                                : "secondary"
-                                        }
-                                        disabled={status === "pending"}
-                                        onClick={() =>
-                                            handleStatusToggle(enrollment)
+                                <TableCell>
+                                    <Badge
+                                        variant="outline"
+                                        className={
+                                            enrollment.status === "COMPLETED"
+                                                ? "text-green-600 bg-green-50 border-green-200"
+                                                : enrollment.status === "ACTIVE"
+                                                    ? "text-blue-600 bg-blue-50 border-blue-200"
+                                                    : "text-red-600 bg-red-50 border-red-200"
                                         }
                                     >
-                                        {enrollment.status === "ACTIVE"
-                                            ? "Cancel"
-                                            : "Activate"}
-                                    </Button>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+                                        {enrollment.status}
+                                    </Badge>
+                                </TableCell>
+
+                                <TableCell className="w-[180px]">
+                                    <div className="flex items-center gap-2">
+                                        <Progress
+                                            value={enrollment.progress || 0}
+                                            className="h-2 w-20"
+                                        />
+                                        <span className="text-xs text-muted-foreground">
+                                            {Math.round(enrollment.progress || 0)}%
+                                        </span>
+                                    </div>
+                                </TableCell>
+
+                                <TableCell className="text-muted-foreground text-sm">
+                                    {new Date(
+                                        enrollment.createdAt
+                                    ).toLocaleDateString()}
+                                </TableCell>
+
+                                <TableCell>
+                                    {enrollment.status !== "COMPLETED" && (
+                                        <Button
+                                            size="sm"
+                                            variant={
+                                                enrollment.status === "ACTIVE"
+                                                    ? "destructive"
+                                                    : "secondary"
+                                            }
+                                            disabled={status === "pending"}
+                                            onClick={() =>
+                                                handleStatusToggle(enrollment)
+                                            }
+                                        >
+                                            {enrollment.status === "ACTIVE"
+                                                ? "Cancel"
+                                                : "Activate"}
+                                        </Button>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="grid gap-4 lg:hidden">
+                {data.map((enrollment) => (
+                    <Card key={enrollment._id} className="overflow-hidden border-border/60">
+                        <CardHeader className="flex flex-row items-start justify-between gap-4 p-4 bg-muted/40">
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold truncate" title={enrollment.courseId?.title}>
+                                    {enrollment.courseId?.title}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Enrolled: {new Date(enrollment.createdAt).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <Badge
+                                variant="outline"
+                                className={
+                                    enrollment.status === "COMPLETED"
+                                        ? "text-green-600 bg-green-50 border-green-200"
+                                        : enrollment.status === "ACTIVE"
+                                            ? "text-blue-600 bg-blue-50 border-blue-200"
+                                            : "text-red-600 bg-red-50 border-red-200"
+                                }
+                            >
+                                {enrollment.status}
+                            </Badge>
+                        </CardHeader>
+                        <CardContent className="p-4 space-y-4">
+                            {/* Student Info */}
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+                                    {enrollment.userId?.avatar ? (
+                                        <img
+                                            src={enrollment.userId.avatar}
+                                            alt={enrollment.userId?.fullName}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-sm font-bold text-primary">
+                                            {enrollment.userId?.fullName?.[0] || "U"}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="font-medium truncate">{enrollment.userId?.fullName}</p>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                        {enrollment.userId?.email}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Progress */}
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                    <span>Progress</span>
+                                    <span>{Math.round(enrollment.progress || 0)}%</span>
+                                </div>
+                                <Progress value={enrollment.progress || 0} className="h-2" />
+                            </div>
+
+                            {/* Action */}
+                            {enrollment.status !== "COMPLETED" && (
+                                <Button
+                                    className="w-full"
+                                    size="sm"
+                                    variant={
+                                        enrollment.status === "ACTIVE"
+                                            ? "destructive"
+                                            : "secondary"
+                                    }
+                                    disabled={status === "pending"}
+                                    onClick={() =>
+                                        handleStatusToggle(enrollment)
+                                    }
+                                >
+                                    {enrollment.status === "ACTIVE"
+                                        ? "Cancel"
+                                        : "Activate"}
+                                </Button>
+                            )}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </>
     );
 }

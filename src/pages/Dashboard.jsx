@@ -150,6 +150,12 @@ export default function Dashboard() {
         };
 
         connect();
+
+        return () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        }
     }, [role]);
 
     if (role === "STUDENT") {

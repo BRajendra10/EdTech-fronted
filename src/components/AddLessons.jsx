@@ -39,14 +39,12 @@ const AddLessonModal = ({ isOpen, onClose, moduleId }) => {
             .required("Lesson title is required")
             .min(3, "Minimum 3 characters"),
         videoFile: Yup.mixed().required("Video file is required"),
-        thumbnail: Yup.mixed().nullable(),
     })
 
     const formik = useFormik({
         initialValues: {
             title: "",
             videoFile: null,
-            thumbnail: null,
         },
         validationSchema,
         onSubmit: (values) => {
@@ -57,7 +55,6 @@ const AddLessonModal = ({ isOpen, onClose, moduleId }) => {
                         title: values.title,
                         order: nextOrder,
                         videoFile: values.videoFile,
-                        thumbnail: values.thumbnail,
                     },
                 })
             )
@@ -143,23 +140,6 @@ const AddLessonModal = ({ isOpen, onClose, moduleId }) => {
                                 {formik.errors.videoFile}
                             </p>
                         )}
-                    </div>
-
-                    {/* Thumbnail */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium">
-                            Thumbnail (Optional)
-                        </label>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) =>
-                                formik.setFieldValue(
-                                    "thumbnail",
-                                    e.currentTarget.files[0]
-                                )
-                            }
-                        />
                     </div>
 
                     {lessonError && (
