@@ -8,12 +8,14 @@ The dashboard provides a **clean, responsive UI** for managing courses, modules,
 
 ## ✨ Key Highlights
 
-* Fully **role-based UI** for Admin, Instructor, and Student views
-* **Responsive design** for mobile, tablet, and desktop
-* **Dynamic forms** with validation using Formik & Yup
-* **Async state management** via Redux Toolkit and RTK Query
-* **Real-time feedback** via toast notifications
-* **Clean and reusable component architecture**
+*   **Fully Role-Based UI**: Distinct views for Admin, Instructor, and Student.
+*   **Real-Time Analytics**: Live dashboard statistics using **Server-Sent Events (SSE)**.
+*   **Interactive Charts**: Data visualization with **Recharts**.
+*   **Modern UI**: Built with **Radix UI** (shadcn/ui) and **Framer Motion** animations.
+*   **Secure Authentication**: Includes Login, Registration, **OTP Verification**, and Password Recovery.
+*   **Dynamic Forms**: Robust validation using **Formik & Yup**.
+*   **Responsive Design**: Optimized for mobile, tablet, and desktop.
+*   **State Management**: Centralized state using **Redux Toolkit**.
 
 ---
 
@@ -23,44 +25,54 @@ The frontend enforces **role-based visibility** and actions based on logged-in u
 
 | Role           | Access & Permissions                                |
 | -------------- | --------------------------------------------------- |
-| **ADMIN**      | Full access to all dashboard modules and users      |
-| **INSTRUCTOR** | Can create and manage own courses, modules, lessons |
-| **STUDENT**    | Can view enrolled courses and track progress        |
+| **ADMIN**      | Full access to users, courses, enrollments, and system settings. |
+| **INSTRUCTOR** | Can create and manage courses, modules, lessons, and view enrollments. |
+| **STUDENT**    | Access to enrolled courses, progress tracking, and student dashboard. |
 
-* Navigation menus and buttons change dynamically based on the role
-* Protected routes prevent unauthorized access
-* Form and action validations prevent accidental misuse
+*   Navigation menus and buttons change dynamically based on the role.
+*   Protected routes prevent unauthorized access.
 
 ---
 
 ## 📚 Dashboard Modules
 
-### Courses
+### 📊 Dashboard
+*   **Real-time Stats**: Live updates for users, courses, and enrollments via SSE.
+*   **Visualizations**: Line charts for monthly activity and Pie charts for course status.
+*   **Recent Activity**: Quick view of recent enrollments.
 
-* View all courses with filters and sorting
-* Create, update, and delete courses
-* Assign instructors to courses
-* See course status: `DRAFT`, `PUBLISHED`, `ARCHIVED`
+### 🎓 Courses
+*   View all courses with filters (Search, Status).
+*   Create, update, and delete courses (Admin/Instructor).
+*   **Rich Media**: Support for video lessons and thumbnails.
+*   See course status: `DRAFT`, `PUBLISHED`, `UNPUBLISHED`.
 
-### Modules & Lessons
+### 📝 Modules & Lessons
 
-* Nested module → lesson structure
-* Add, update, reorder modules and lessons
-* Lesson fields include:
+*   Nested module → lesson structure.
+*   Add, update, reorder modules and lessons.
+*   Lesson fields include:
 
   * Video URL / embedded content
   * Duration
   * Additional resources (files / links)
 
-### Users
+### 👥 Users
 
-* Admin can view, edit, or remove users
-* Role assignment and status management
+*   Admin can view and search users.
+*   Role assignment and status management (`ACTIVE`, `PENDING`, `SUSPENDED`).
+*   **Views**: Table view for desktop, Card view for mobile.
 
-### Enrollments
+### 📚 Enrollments
 
-* Track which students are enrolled in which courses
-* See progress, completion, and enrollment status
+*   Track which students are enrolled in which courses.
+*   See progress, completion, and enrollment status.
+*   Admin actions to cancel or activate enrollments.
+
+### ⚙️ Settings
+*   Profile management.
+*   Change password functionality.
+*   Notification and appearance preferences.
 
 ---
 
@@ -68,10 +80,14 @@ The frontend enforces **role-based visibility** and actions based on logged-in u
 
 * **React (Vite)** – Frontend framework
 * **Tailwind CSS** – Styling and layout
+* **UI Components** – shadcn/ui (Radix UI)
 * **Redux Toolkit** – State management
 * **React Router v6** – Routing
 * **Formik & Yup** – Forms & validation
+* **Recharts** – Data visualization
 * **Axios** – API requests
+* **Sonner** – Toast notifications
+* **Framer Motion** – Animations
 * **Lucide Icons** – UI icons
 
 ---
@@ -79,13 +95,13 @@ The frontend enforces **role-based visibility** and actions based on logged-in u
 ## 📁 Folder Structure
 
 ```bash
-frontend/
+src/
 │
-├── components/        # Reusable UI components (buttons, inputs, cards)
-├── pages/             # Page-level components (Dashboard, Courses, Users)
-├── features/          # Redux slices & async thunks
-├── routes/            # React Router route definitions
-├── services/          # API service calls
+├── components/        # Reusable UI components (ui/ for shadcn)
+├── pages/             # Page-level components (Dashboard, Courses, Auth)
+├── features/          # Redux setup
+│   ├── slice/         # Redux slices (userSlice, courseSlice, etc.)
+│   └── axios.js       # Axios instance
 ├── utils/             # Helper functions (formatters, validators)
 ├── App.jsx            # Main App component
 └── main.jsx           # React DOM rendering and setup
@@ -95,11 +111,12 @@ frontend/
 
 ## 🚀 Key Features
 
-* **Dynamic forms** for adding/editing courses, modules, and lessons
-* **Sorting, filtering, and search** across all lists
-* **Real-time toast notifications** for actions like create, update, delete
-* **Responsive, mobile-friendly dashboard**
-* **Clean, modular codebase** for scalability
+*   **Authentication Flow**: Login, Register, OTP Verification, Password Reset.
+*   **Dynamic Forms**: For adding/editing courses, modules, and lessons.
+*   **Sorting, Filtering, & Search**: Across all data lists.
+*   **Real-time Feedback**: Toast notifications for user actions.
+*   **Responsive Layouts**: Adaptive designs for mobile cards vs. desktop tables.
+*   **Video Player**: Integrated player for course content.
 
 ---
 
@@ -124,16 +141,14 @@ frontend/
 
 ## 📌 Status
 
-✅ Dashboard Layout  
+✅ Dashboard Layout (with SSE)  
+✅ Authentication (Login, Register, OTP, Password Reset)  
 ✅ Courses CRUD  
 ✅ Modules & Lessons CRUD  
 ✅ Users Management  
 ✅ Role-Based UI  
-✅ Enrollment Overview  
-
-Perfect, Rajendra! A **footer section** adds a nice finishing touch — you can include things like **contact info, social links, GitHub, LinkedIn, or a “Made with ❤️” message**.
-
-Here’s a **consistent footer section** you can add to **both backend and frontend READMEs**:
+✅ Enrollment & Progress Tracking
+✅ Settings Page
 
 ---
 

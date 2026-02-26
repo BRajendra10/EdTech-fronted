@@ -89,14 +89,6 @@ export default function EnrollmentsPage() {
     return (
         <div className="space-y-6 animate-in fade-in">
             <Card className="border-none shadow-none bg-transparent">
-                {/* <CardHeader className="px-0">
-                    <CardTitle>My Enrollments</CardTitle>
-                    <CardDescription>
-                        {isAdmin
-                            ? "Monitor student enrollment status and progress."
-                            : "Track your learning progress and continue where you left off."}
-                    </CardDescription>
-                </CardHeader> */}
                 <CardContent className="px-0 space-y-6">
                     {/* Controls */}
                     <div className="flex flex-col sm:flex-row gap-4">
