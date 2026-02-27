@@ -39,7 +39,7 @@ The frontend enforces **role-based visibility** and actions based on logged-in u
 The current preview showcases core functionality of the project.  
 A refreshed walkthrough highlighting recent UI improvements will be added soon.
 
-**Watch Demo:** [View Here](https://drive.google.com/file/d/1zXOpIP9RiClN1xvF_3alwe3NP_GN4pad/view?usp=drivesdk)
+**Watch Demo:** [View Here](https://drive.google.com/file/d/1OwtpI2WYLKZF514XHwPU26b_E2rlsv4Q/view?usp=sharing)
 
 ---
 
