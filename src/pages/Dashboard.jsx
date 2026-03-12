@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         const eventSource = new EventSource(
-            "http://localhost:4000/api/v1/stream/admin/stream",
+            `${import.meta.env.VITE_BACKEND_BASE_URI}/stream/admin/stream`,
             { withCredentials: true }
         );
 
