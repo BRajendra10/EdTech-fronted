@@ -46,7 +46,7 @@ export default function StudentDashboard() {
 
     useEffect(() => {
         const eventSource = new EventSource(
-            `${import.meta.env.VITE_BACKEND_BASE_URI}/api/v1/stream/user/stream`,
+            `${import.meta.env.VITE_BACKEND_BASE_URI}/stream/user/stream`,
             { withCredentials: true }
         );
 
