@@ -66,7 +66,7 @@ export default function Sidebar() {
                     </p>
 
                     <SidebarMenu>
-                        {filteredMenu.map(({ label, icon: Icon, to }) => (
+                        {filteredMenu?.map(({ label, icon: Icon, to }) => (
                             <SidebarMenuItem key={to}>
                                 <NavLink
                                     to={to}

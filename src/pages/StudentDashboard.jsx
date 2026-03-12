@@ -46,7 +46,7 @@ export default function StudentDashboard() {
 
     useEffect(() => {
         const eventSource = new EventSource(
-            "http://localhost:4000/api/v1/users/user/stream",
+            "http://localhost:4000/api/v1/stream/user/stream",
             { withCredentials: true }
         );
 

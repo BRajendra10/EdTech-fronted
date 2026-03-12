@@ -44,7 +44,6 @@ function App() {
             <Route path="enrollment" element={<EnrollmentsPage />} />
           </Route>
 
-
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
