@@ -28,6 +28,7 @@ import {
     Pie,
     Cell,
 } from "recharts";
+import api from "../features/axios";
 
 /* ---------------- INITIAL STATE ---------------- */
 
@@ -45,22 +46,36 @@ export default function StudentDashboard() {
     /* ---------------- SSE CONNECTION ---------------- */
 
     useEffect(() => {
-        const eventSource = new EventSource(
-            `${import.meta.env.VITE_BACKEND_BASE_URI}/stream/user/stream`,
-            { withCredentials: true }
-        );
+        let eventSource
+        const start = () => {
+            eventSource = new EventSource(
+                `${import.meta.env.VITE_BACKEND_BASE_URI}/stream/user/stream`,
+                { withCredentials: true }
+            );
 
-        eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            setStats(data);
-        };
+            eventSource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                setStats(data);
+            };
 
-        eventSource.onerror = (err) => {
-            console.error("SSE Error:", err);
-            eventSource.close();
-        };
+            eventSource.onerror = async (err) => {
+                console.log("SSE Error:", err);
+                eventSource.close();
+                
+                try {
+                    await api.post("/users/refresh-token");
+                    start();
+                } catch (refreshError) {
+                    console.log("refresh failed now login")
 
-        return () => eventSource.close();
+                    window.location.href = "/login";
+                    return Promise.reject(refreshError)
+                }
+            };
+        }
+
+        start();
+        return () => eventSource?.close();
     }, []);
 
     /* ---------------- MONTH FORMATTER ---------------- */
