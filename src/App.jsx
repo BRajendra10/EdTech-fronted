@@ -9,7 +9,7 @@ import DashboardLayout from "./components/layout/DashboardLayout.jsx";
 import Settings from "./pages/Setting.jsx";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { getCurrentUser } from "./features/slice/userSlice.js";
+// import { getCurrentUser } from "./features/slice/userSlice.js";
 import Dashboard from "./pages/Dashboard.jsx";
 import CoursesPage from "./pages/Courses.jsx";
 import UsersPage from "./pages/Users.jsx";
@@ -20,12 +20,14 @@ import ForgotPassword from "./pages/auth/ForgotPassword.jsx";
 import VerifyResetOtp from "./pages/auth/VerifyResetOtp.jsx";
 import ResetPassword from "./pages/auth/ResetPassword.jsx";
 import RoleBasedDashboard from "./pages/RolebasedDashboard.jsx";
+import { fetchMe } from "./features/slice/userSlice.js";
 
 function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getCurrentUser());
+    dispatch(fetchMe());
+    // dispatch(getCurrentUser());
   }, [dispatch])
 
   return (

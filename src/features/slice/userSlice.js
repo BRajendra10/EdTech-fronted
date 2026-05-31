@@ -102,6 +102,20 @@ export const logoutUser = createAsyncThunk(
     }
 );
 
+export const fetchMe = createAsyncThunk(
+    "auth/fetchMe",
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await api.get("/users/me");
+            return res.data.data;
+        } catch (err) {
+            return rejectWithValue(
+                err.response?.data?.message || "Failed to fetch user"
+            );
+        }
+    }
+);
+
 export const fetchAllUsers = createAsyncThunk(
     "users/fetchAll",
     async ({ page = 1, limit = 10, role, status, search }, { rejectWithValue }) => {
@@ -241,15 +255,15 @@ const userSlice = createSlice({
             state.error = null;
         },
 
-        getCurrentUser: (state) => {
-            const storedUser = localStorage.getItem("currentUser");
+        // getCurrentUser: (state) => {
+        //     const storedUser = localStorage.getItem("currentUser");
 
-            if (storedUser) {
-                state.currentUser = JSON.parse(storedUser);
-            } else {
-                state.currentUser = null;
-            }
-        },
+        //     if (storedUser) {
+        //         state.currentUser = JSON.parse(storedUser);
+        //     } else {
+        //         state.currentUser = null;
+        //     }
+        // },
 
         resetPasswordFlow: (state) => {
             state.otpSent = false;
@@ -350,14 +364,19 @@ const userSlice = createSlice({
                 state.passwordResetSuccess = true;
             })
 
+            .addCase(fetchMe.fulfilled, (state, action) => {
+                state.currentUser = action.payload;
+                state.status = "fulfilled";
+            })
+
             // Handle ALL pending states
-            .addMatcher(isPending(login, signup, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus, forgotPassword, verifyResetOtp, resetPassword), (state) => {
+            .addMatcher(isPending(login, signup, fetchMe, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus, forgotPassword, verifyResetOtp, resetPassword), (state) => {
                 state.status = "pending";
                 state.error = null;
             })
 
             // Handle ALL rejected states
-            .addMatcher(isRejected(login, signup, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus, forgotPassword, verifyResetOtp, resetPassword), (state, action) => {
+            .addMatcher(isRejected(login, signup, fetchMe, verifyOtp, resendVerificationOtp, changePassword, logoutUser, fetchAllUsers, updateUserStatus, forgotPassword, verifyResetOtp, resetPassword), (state, action) => {
                 state.status = "rejected";
                 state.error = action.payload;
             })
