@@ -65,15 +65,7 @@ export default function AdminDashboard() {
                 console.log("SSE Error:", err);
                 eventSource.close();
 
-                try {
-                    await api.post("/users/refresh-token");
-                    start();
-                } catch (refreshError) {
-                    console.log("refresh failed now login")
-
-                    window.location.href = "/login";
-                    return Promise.reject(refreshError)
-                }
+                window.location.href = "/login";
             };
         }
 
